@@ -1,0 +1,73 @@
+/* Consent Mode V2 - Admin Styles */
+
+.cmv2-admin-tabs { 
+    background: #fff; 
+    padding: 20px; 
+    margin-top: 20px; 
+    border: 1px solid #ccd0d4; 
+    box-shadow: 0 1px 1px rgba(0,0,0,.04); 
+}
+
+.cmv2-tab-content { 
+    display: none; 
+    padding-top: 20px; 
+}
+
+.cmv2-tab-content.active { 
+    display: block; 
+}
+
+.cmv2-status-box { 
+    background: #f0f9ff; 
+    border-left: 4px solid #0073aa; 
+    padding: 15px; 
+    margin: 15px 0; 
+}
+
+.cmv2-status-box p { 
+    margin: 8px 0; 
+}
+
+.cmv2-color-picker { 
+    max-width: 100px; 
+}
+
+/* Color Presets */
+.cmv2-color-presets { 
+    background: #f9f9f9; 
+    padding: 20px; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+}
+
+.cmv2-color-presets h3 { 
+    margin-top: 0; 
+}
+
+.preset-buttons { 
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+}
+
+.preset-btn { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    padding: 10px 15px; 
+    min-width: 120px;
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.preset-preview { 
+    width: 80px; 
+    height: 40px; 
+    border-radius: 6px; 
+    margin-bottom: 8px; 
+    border: 2px solid #ddd;
+}

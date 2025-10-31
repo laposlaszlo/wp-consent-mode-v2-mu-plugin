@@ -1,0 +1,45 @@
+GTM – minimál beállítási jegyzet
+=================================
+
+1) Consent Initialization – Default
+-----------------------------------
+Hozz létre egy **Tag**-et:
+- Típus: Custom HTML
+- HTML:
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied'
+  });
+  dataLayer.push({event:'cm_default', source:'gtm'});
+</script>
+- Trigger: **Consent Initialization – All Pages**
+Megjegyzés: ha a WP MU plugin fent van, ez redundáns lehet. A lényeg: a default fusson LEGELŐSZÖR.
+
+2) Consent Update – (opcionális, ha nem a plugin hív)
+-----------------------------------------------------
+Ha a bannert NEM a plugin végzi, vagy külön logikát akarsz, a döntésnél hívd:
+<script>
+  gtag('consent','update',{
+    ad_storage: 'granted',            // vagy 'denied'
+    analytics_storage: 'granted',     // vagy 'denied'
+    ad_user_data: 'granted',
+    ad_personalization: 'granted'
+  });
+  dataLayer.push({event:'cm_update'});
+</script>
+
+3) Tag-szintű Consent
+---------------------
+- GA4 Configuration / GA4 Event / Google Ads Conversion tageknél: 'Consent Settings' -> állítsd be,
+  hogy Analytics/Ads consent "granted" esetén fusson.
+- Debug: Preview (Tag Assistant) + Consent Overview.
+
+4) Nem-Google tagek
+-------------------
+- Állítsd be a Triggert úgy, hogy csak akkor fusson, ha a dataLayer-ben a `cmv2_ads` értéke 'granted'.
+  (Az MU plugin `cm_update` eventnél ezt bepusholja.)
