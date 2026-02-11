@@ -43,18 +43,59 @@
 
 ```
 consent-mode-v2-mu-plugin/
-├── consent-mode-v2.php          # Main plugin file (530 lines)
-├── assets/                      # External assets (v2.0.0+)
+├── consent-mode-v2.php          # Main plugin file
+├── composer.json                # Composer dependencies
+├── composer.lock                # Locked dependencies versions
+├── vendor/                      # Composer packages (Plugin Update Checker)
+├── includes/                    # PHP classes
+│   ├── class-cmv2-settings.php # Admin settings interface
+│   └── class-cmv2-frontend.php # Frontend rendering & assets
+├── assets/                      # External frontend assets
 │   ├── css/
-│   │   ├── consent-banner.css   # Frontend banner styles
-│   │   └── admin.css            # Admin interface styles
+│   │   ├── consent-banner.css  # Frontend banner styles
+│   │   └── admin.css           # Admin interface styles
 │   └── js/
-│       ├── consent-banner.js    # Frontend consent logic
-│       └── admin.js             # Admin preset logic
-├── README.md                    # This file
-├── REFAKTORING.md              # v2.0.0 refactoring docs (Hungarian)
-├── GTM-snippets.txt            # GTM configuration examples
-└── [Other documentation files in Hungarian]
+│       ├── consent-banner.js   # Frontend consent logic
+│       └── admin.js            # Admin preset logic
+├── README.md                    # Documentation (English)
+├── RELEASE-GUIDE.md            # Release & update guide
+└── REFACTOR-SUMMARY.md         # Refactoring docs (Hungarian)
 ```
 
 ---
+
+## 📋 Changelog
+
+### [2.4.0] - 2025-02-11
+
+**Added:**
+- Automatic plugin updates from GitHub releases
+- Popup position selector (center, bottom-left, bottom-right)
+- Comprehensive release guide (RELEASE-GUIDE.md)
+- Composer integration with Plugin Update Checker library
+
+**Fixed:**
+- Removed duplicate cm_default event in JavaScript
+- Fixed consent event timing issues
+- Removed OLD backup files
+
+**Changed:**
+- Updated plugin headers with proper metadata
+- Enhanced README with installation and update instructions
+- Improved code organization and documentation
+
+### [2.3.0] - 2025-02-10
+- Modular JavaScript architecture (refactored)
+- Improved consent flow
+
+### [2.0.0] - 2025-02-08
+- External CSS/JS files (cacheable)
+- Admin interface with color picker
+- Export/Import settings
+- 6 color presets
+- 37% code reduction
+- 44% faster load times
+
+---
+
+**Made with ❤️ for GDPR compliance and user privacy**

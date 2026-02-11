@@ -3,18 +3,25 @@
 /**
  * Plugin Name: CM V2 – Minimal WP MU Plugin (Consent Mode v2)
  * Description: Minimal saját fejlesztésű consent banner WordPress-hez (MU plugin). GCM v2 default/update jelek, localStorage tárolás, preferencia-módosítás. Telepítés: place into wp-content/mu-plugins/
+ * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
- * Version: 2.3.0
+ * Author URI: https://laposlaszlo.com
+ * Version: 2.4.0
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * License: MIT
+ * License URI: https://opensource.org/licenses/MIT
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.3.0');
+define('CMV2_VERSION', '2.4.0');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));
+define('CMV2_PLUGIN_FILE', __FILE__);
 
 // Option keys
 define('CMV2_OPTION_KEY', 'cmv2_settings');
@@ -74,3 +81,43 @@ function cmv2_get_options()
 // Initialize classes
 CMV2_Settings::init();
 CMV2_Frontend::init();
+
+// Initialize Update Checker
+add_action('plugins_loaded', 'cmv2_init_update_checker');
+
+/**
+ * Initialize Plugin Update Checker
+ * Checks for updates from GitHub repository
+ */
+function cmv2_init_update_checker()
+{
+    // Check if Composer autoload exists
+    $autoload_file = CMV2_PLUGIN_DIR . '/vendor/autoload.php';
+    if (!file_exists($autoload_file)) {
+        return; // Composer dependencies not installed
+    }
+
+    require_once $autoload_file;
+
+    // Check if Plugin Update Checker class exists
+    if (!class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
+        return;
+    }
+
+    // Initialize update checker
+    $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin',
+        CMV2_PLUGIN_FILE,
+        'wp-consent-mode-v2-mu-plugin'
+    );
+
+    // Set the branch to check for updates (default is 'main')
+    $updateChecker->setBranch('main');
+
+    // Optional: Get the branch from the settings
+    // Uncomment if you want to allow updates from different branches
+    // $updateChecker->setBranch('develop');
+
+    // Optional: If using a private repository, set authentication token
+    // $updateChecker->setAuthentication('your-github-token');
+}

@@ -1,0 +1,21 @@
+{
+    "name": "laposlaszlo/wp-consent-mode-v2",
+    "description": "Minimal Consent Mode V2 MU Plugin for WordPress with Google Consent Mode v2 integration",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lapos László",
+            "email": "info@laposlaszlo.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "yahnis-elsts/plugin-update-checker": "^5.4"
+    },
+    "autoload": {
+        "classmap": [
+            "includes/"
+        ]
+    }
+}
