@@ -15,18 +15,40 @@ class CMV2_Frontend
      */
     public static function init()
     {
-        // Use PHP_INT_MIN priority to ensure consent default runs BEFORE GTM
-        // This prevents "consent state read before default set" warning
-        add_action('wp_head', [__CLASS__, 'render_default_consent'], PHP_INT_MIN);
+        // Use template_redirect with output buffering to ensure consent runs FIRST
+        // This is more reliable than wp_head hooks when GTMKit or similar plugins are used
+        add_action('template_redirect', [__CLASS__, 'start_consent_buffer'], 1);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
         add_action('wp_footer', [__CLASS__, 'render_banner'], 99);
     }
-
+    
     /**
-     * Render default consent in head
+     * Start output buffer to inject consent default at the very beginning of <head>
      */
-    public static function render_default_consent()
+    public static function start_consent_buffer()
     {
+        ob_start(function($html) {
+            // Generate consent default script
+            $consent_script = self::get_consent_default_script();
+            
+            // Inject right after <head> tag
+            $html = preg_replace(
+                '/(<head[^>]*>)/i',
+                '$1' . $consent_script,
+                $html,
+                1
+            );
+            
+            return $html;
+        });
+    }
+    
+    /**
+     * Get consent default script as string
+     */
+    private static function get_consent_default_script()
+    {
+        ob_start();
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -48,7 +70,7 @@ class CMV2_Frontend
 
                 gtag('consent', 'default', {
                     'ad_storage': 'denied',
-                    'analytics_storage': 'denied', // functional/analytics enabled by default
+                    'analytics_storage': 'denied',
                     'ad_user_data': 'denied',
                     'ad_personalization': 'denied',
                     'functionality_storage': 'granted',
@@ -76,6 +98,7 @@ class CMV2_Frontend
             }
         </script>
         <?php
+        return ob_get_clean();
     }
 
     /**
