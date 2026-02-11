@@ -192,6 +192,12 @@ class CMV2_Settings
             // Ne használjunk sanitize_key()-t, mert az lowercase-re alakítja!
             // A Zaraz Purpose ID case-sensitive, használjunk sanitize_text_field()-et
             return sanitize_text_field($value);
+        } elseif ($key === 'gtm_container_id') {
+            $value = sanitize_text_field($value);
+            if ($value === '') {
+                return '';
+            }
+            return preg_match('/^GTM-[A-Z0-9]+$/i', $value) ? strtoupper($value) : '';
         } elseif ($key === 'popup_position') {
             return in_array($value, ['center', 'bottom-left', 'bottom-right']) ? $value : 'center';
         } elseif ($key === 'privacy_link_url') {
@@ -610,12 +616,24 @@ class CMV2_Settings
                 </tr>
             </table>
 
+            <h3>Google Tag Manager</h3>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="cmv2_gtm_container_id">GTM Container ID</label></th>
+                    <td>
+                        <input type="text" id="cmv2_gtm_container_id" name="cmv2_gtm_container_id" value="<?php echo esc_attr($options['gtm_container_id']); ?>" class="regular-text" placeholder="GTM-XXXXXXX" />
+                        <p class="description">Ha megadod, a GTM konténer automatikusan betöltődik a default consent után.</p>
+                    </td>
+                </tr>
+            </table>
+
             <h3>Consent Mode Státusz</h3>
             <div class="cmv2-status-box">
                 <p><strong>Google Consent Mode V2:</strong> ✅ Aktív</p>
-                <p><strong>Default consent:</strong> Beállítva (minden denied)</p>
+                <p><strong>Default consent:</strong> Beállítva (cookie alapján, különben denied)</p>
                 <p><strong>Update consent:</strong> Beállítva (felhasználói választás alapján)</p>
                 <p><strong>GTM események:</strong> cm_default, cm_update</p>
+                <p><strong>GTM konténer:</strong> <?php echo $options['gtm_container_id'] ? '✅ ' . esc_html($options['gtm_container_id']) : '❌ Nincs megadva'; ?></p>
                 <p><strong>Cloudflare Zaraz:</strong> <?php echo $options['use_zaraz'] ? '✅ Engedélyezve (' . esc_html($options['zaraz_purpose_name']) . ')' : '❌ Letiltva'; ?></p>
                 <p><strong>Megfelelőség:</strong> GDPR, Google Consent Mode V2</p>
                 <p><strong>Verzió:</strong> <?php echo CMV2_VERSION; ?> (<?php echo CMV2_CONSENT_VERSION; ?>)</p>

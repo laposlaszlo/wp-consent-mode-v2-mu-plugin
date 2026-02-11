@@ -32,6 +32,11 @@ class CMV2_Frontend
      */
     public static function render_default_consent()
     {
+        $opts = cmv2_get_options();
+        $consent = self::get_consent_from_cookie($opts);
+        $analytics_status = $consent['analytics'];
+        $ads_status = $consent['ads'];
+        $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -42,8 +47,8 @@ class CMV2_Frontend
             }
 
             // Consent Mode v2 – DEFAULT:
-            // - Szükséges és funkcionális/analitika engedélyezve alapértelmezettként
-            // - Hirdetés/marketing tiltva alapértelmezettként
+            // - Szükséges és funkcionális engedélyezve alapértelmezettként
+            // - Analytics/Ads a cookie-ban tárolt állapot alapján (ha van), különben denied
             // - wait_for_update: 500 (GTM vár a frissítésre)
             // - region: EU/EEA list (GDPR-only default)
             // - url_passthrough és ads_data_redaction ajánlott beállítások
@@ -52,10 +57,10 @@ class CMV2_Frontend
                 gtag('set', 'ads_data_redaction', true);
 
                 gtag('consent', 'default', {
-                    'ad_storage': 'denied',
-                    'analytics_storage': 'denied',
-                    'ad_user_data': 'denied',
-                    'ad_personalization': 'denied',
+                    'ad_storage': '<?php echo esc_js($ads_status); ?>',
+                    'analytics_storage': '<?php echo esc_js($analytics_status); ?>',
+                    'ad_user_data': '<?php echo esc_js($ads_status); ?>',
+                    'ad_personalization': '<?php echo esc_js($ads_status); ?>',
                     'functionality_storage': 'granted',
                     'necessary_storage': 'granted',
                     'wait_for_update': 500,
@@ -67,10 +72,10 @@ class CMV2_Frontend
                     'event': 'cm_default',
                     'cmv2_version': '<?php echo CMV2_CONSENT_VERSION; ?>',
                     'consent_default': {
-                        ad_storage: 'denied',
-                        analytics_storage: 'denied',
-                        ad_user_data: 'denied',
-                        ad_personalization: 'denied',
+                        ad_storage: '<?php echo esc_js($ads_status); ?>',
+                        analytics_storage: '<?php echo esc_js($analytics_status); ?>',
+                        ad_user_data: '<?php echo esc_js($ads_status); ?>',
+                        ad_personalization: '<?php echo esc_js($ads_status); ?>',
                         functionality_storage: 'granted',
                         necessary_storage: 'granted'
                     }
@@ -80,7 +85,60 @@ class CMV2_Frontend
                 console.warn('CMV2: consent default init failed', e);
             }
         </script>
+        <?php if (!empty($gtm_container_id)): ?>
+            <script>
+                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                })(window,document,'script','dataLayer','<?php echo esc_js($gtm_container_id); ?>');
+            </script>
+        <?php endif; ?>
         <?php
+    }
+
+    /**
+     * Read consent from cookie and return status strings.
+     */
+    private static function get_consent_from_cookie($opts)
+    {
+        $default = [
+            'analytics' => 'denied',
+            'ads' => 'denied',
+        ];
+
+        if (!isset($_COOKIE[CMV2_LS_KEY])) {
+            return $default;
+        }
+
+        $raw = wp_unslash($_COOKIE[CMV2_LS_KEY]);
+        $decoded = json_decode(rawurldecode($raw), true);
+        if (!is_array($decoded)) {
+            return $default;
+        }
+
+        if (!isset($decoded['version']) || $decoded['version'] !== CMV2_CONSENT_VERSION) {
+            return $default;
+        }
+
+        if (!isset($decoded['ts']) || !is_numeric($decoded['ts'])) {
+            return $default;
+        }
+
+        $ttl_days = isset($opts['ttl_days']) ? intval($opts['ttl_days']) : 180;
+        $ttl_seconds = max(1, $ttl_days) * DAY_IN_SECONDS;
+        if ((time() - intval($decoded['ts'])) > $ttl_seconds) {
+            return $default;
+        }
+
+        $choices = isset($decoded['choices']) && is_array($decoded['choices']) ? $decoded['choices'] : [];
+        $analytics = !empty($choices['analytics']);
+        $ads = !empty($choices['ads']);
+
+        return [
+            'analytics' => $analytics ? 'granted' : 'denied',
+            'ads' => $ads ? 'granted' : 'denied',
+        ];
     }
 
     /**
