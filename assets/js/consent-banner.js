@@ -71,34 +71,6 @@
         window.dataLayer.push(arguments);
       },
       
-      setDefault: function() {
-        this.gtag('set', 'url_passthrough', true);
-        this.gtag('set', 'ads_data_redaction', true);
-        
-        this.gtag('consent', 'default', {
-          ad_storage: 'denied',
-          analytics_storage: 'denied',
-          ad_user_data: 'denied',
-          ad_personalization: 'denied',
-          functionality_storage: 'granted',
-          necessary_storage: 'granted',
-          wait_for_update: 500,
-          region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB','IS','LI','NO','CH']
-        });
-        
-        window.dataLayer.push({
-          event: 'cm_default',
-          consent_default: {
-            ad_storage: 'denied',
-            analytics_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied',
-            functionality_storage: 'granted',
-            necessary_storage: 'granted'
-          }
-        });
-      },
-      
       update: function(choices) {
         const analytics = choices.analytics ? 'granted' : 'denied';
         const ads = choices.ads ? 'granted' : 'denied';
@@ -189,12 +161,8 @@
     // ======================
     const App = {
       init: function() {
-        // Set default consent first
-        try {
-          ConsentManager.setDefault();
-        } catch(e) {
-          console.error('CMV2: Consent default init failed', e);
-        }
+        // Default consent is already set by PHP in <head> before GTM loads
+        // No need to set it again here to avoid duplicate cm_default events
         
         // Initialize UI
         if (!UIController.init()) {
