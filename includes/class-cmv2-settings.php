@@ -597,10 +597,13 @@ class CMV2_Settings
                     <th scope="row"><label for="cmv2_zaraz_purpose_name">Zaraz Purpose ID</label></th>
                     <td>
                         <input type="text" id="cmv2_zaraz_purpose_name" name="cmv2_zaraz_purpose_name" value="<?php echo esc_attr($options['zaraz_purpose_name']); ?>" class="regular-text" placeholder="marketing" />
-                        <p class="description"><strong>FONTOS:</strong> Add meg a Purpose <strong>ID-ját</strong> (nem a nevét!).<br>
-                        📍 <strong>Hol találod meg:</strong> Cloudflare Dashboard → Zaraz → Settings → Consent Management → Purposes<br>
-                        Kattints a Purpose-re és másold ki az <code>ID</code> mezőt (pl. "marketing", "analytics").<br>
-                        Ha hibát kapsz a konzolban, ellenőrizd hogy ez az ID létezik-e a Zaraz-ban.</p>
+                        <p class="description">
+                            <strong>⚠️ FONTOS:</strong> Add meg a Purpose <strong>ID-ját</strong> (nem a nevét!) <strong>PONTOS kis/nagybetűkkel!</strong><br>
+                            📍 <strong>Hol találod meg:</strong> Cloudflare Dashboard → Zaraz → Settings → Consent Management → Purposes<br>
+                            Kattints a Purpose-re és <strong>másold ki</strong> az <code>ID</code> mezőt (pl. "marketing", "kujO", "analytics").<br>
+                            🔴 Az ID <strong>case-sensitive</strong>: "kujo" ≠ "kujO" ≠ "KUJO"<br>
+                            Ha hibát kapsz a konzolban, ellenőrizd hogy ez az ID létezik-e és pontosan egyezik-e!
+                        </p>
                     </td>
                 </tr>
             </table>
