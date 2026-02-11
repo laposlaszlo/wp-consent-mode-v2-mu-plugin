@@ -164,6 +164,13 @@
       
       hideModal: function() {
         if (!this.elements.modal) return;
+        
+        // Remove focus from any element inside modal before hiding
+        // This prevents aria-hidden + focused element conflict
+        if (document.activeElement && this.elements.modal.contains(document.activeElement)) {
+          document.activeElement.blur();
+        }
+        
         this.elements.modal.classList.add('cmv2-hidden');
         this.elements.modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
