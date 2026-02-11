@@ -6,7 +6,7 @@
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.4.1
+ * Version: 2.4.2
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
@@ -104,20 +104,22 @@ function cmv2_init_update_checker()
         return;
     }
 
-    // Initialize update checker
+    // Initialize update checker for GitHub
     $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
         'https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin',
         CMV2_PLUGIN_FILE,
         'wp-consent-mode-v2-mu-plugin'
     );
 
-    // Set the branch to check for updates (default is 'main')
+    // Configure to use release assets or zipball
+    $updateChecker->getVcsApi()->enableReleaseAssets();
+
+    // Set the branch to check for updates
     $updateChecker->setBranch('main');
 
-    // Optional: Get the branch from the settings
-    // Uncomment if you want to allow updates from different branches
-    // $updateChecker->setBranch('develop');
-
     // Optional: If using a private repository, set authentication token
-    // $updateChecker->setAuthentication('your-github-token');
+    // Add to wp-config.php: define('CMV2_GITHUB_TOKEN', 'your_token');
+    if (defined('CMV2_GITHUB_TOKEN') && CMV2_GITHUB_TOKEN) {
+        $updateChecker->setAuthentication(CMV2_GITHUB_TOKEN);
+    }
 }
