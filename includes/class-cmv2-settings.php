@@ -189,7 +189,9 @@ class CMV2_Settings
         } elseif ($key === 'default_language') {
             return in_array($value, ['hu', 'en', 'fr']) ? $value : 'hu';
         } elseif ($key === 'zaraz_purpose_name') {
-            return sanitize_key($value);
+            // Ne használjunk sanitize_key()-t, mert az lowercase-re alakítja!
+            // A Zaraz Purpose ID case-sensitive, használjunk sanitize_text_field()-et
+            return sanitize_text_field($value);
         } elseif ($key === 'popup_position') {
             return in_array($value, ['center', 'bottom-left', 'bottom-right']) ? $value : 'center';
         } elseif ($key === 'privacy_link_url') {
