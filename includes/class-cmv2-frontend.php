@@ -20,8 +20,9 @@ class CMV2_Frontend
             return;
         }
         
-        // Use wp_head with highest priority (most reliable method)
-        add_action('wp_head', [__CLASS__, 'render_default_consent'], 1);
+        // Use wp_head with the earliest priority to beat other tags/snippets.
+        // Note: If a tag is hard-coded before wp_head() in header.php, it will still run first.
+        add_action('wp_head', [__CLASS__, 'render_default_consent'], 0);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
         add_action('wp_footer', [__CLASS__, 'render_banner'], 99);
     }
