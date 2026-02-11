@@ -15,40 +15,22 @@ class CMV2_Frontend
      */
     public static function init()
     {
-        // Use template_redirect with output buffering to ensure consent runs FIRST
-        // This is more reliable than wp_head hooks when GTMKit or similar plugins are used
-        add_action('template_redirect', [__CLASS__, 'start_consent_buffer'], 1);
+        // Only run on frontend
+        if (is_admin()) {
+            return;
+        }
+        
+        // Use wp_head with highest priority (most reliable method)
+        add_action('wp_head', [__CLASS__, 'render_default_consent'], 1);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
         add_action('wp_footer', [__CLASS__, 'render_banner'], 99);
     }
     
     /**
-     * Start output buffer to inject consent default at the very beginning of <head>
+     * Render default consent in head
      */
-    public static function start_consent_buffer()
+    public static function render_default_consent()
     {
-        ob_start(function($html) {
-            // Generate consent default script
-            $consent_script = self::get_consent_default_script();
-            
-            // Inject right after <head> tag
-            $html = preg_replace(
-                '/(<head[^>]*>)/i',
-                '$1' . $consent_script,
-                $html,
-                1
-            );
-            
-            return $html;
-        });
-    }
-    
-    /**
-     * Get consent default script as string
-     */
-    private static function get_consent_default_script()
-    {
-        ob_start();
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -98,7 +80,6 @@ class CMV2_Frontend
             }
         </script>
         <?php
-        return ob_get_clean();
     }
 
     /**
