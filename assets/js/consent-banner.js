@@ -95,7 +95,18 @@
             // Debug log
             console.log('CMV2: Zaraz consent updated', zarazConsent);
           } catch(e) {
-            console.warn('CMV2: Zaraz consent error', e);
+            console.error('CMV2: Zaraz consent error:', e.message || e);
+            console.error('❌ A "' + ZARAZ_PURPOSE + '" Purpose ID nem található a Zaraz-ban!');
+            console.error('📍 Ellenőrizd: Cloudflare → Zaraz → Settings → Consent Management → Purposes');
+            console.error('💡 Másold ki a Purpose ID mezőt (nem a nevét!) és add meg a WordPress admin felületen.');
+            
+            // Próbáljuk meg listázni az elérhető purpose-öket
+            if (window.zaraz.consent.APIReady && window.zaraz.consent.purposes) {
+              const availablePurposes = Object.keys(window.zaraz.consent.purposes);
+              if (availablePurposes.length > 0) {
+                console.log('✅ Elérhető Zaraz Purpose ID-k:', availablePurposes);
+              }
+            }
           }
         }
 

@@ -594,10 +594,13 @@ class CMV2_Settings
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="cmv2_zaraz_purpose_name">Zaraz Purpose neve</label></th>
+                    <th scope="row"><label for="cmv2_zaraz_purpose_name">Zaraz Purpose ID</label></th>
                     <td>
                         <input type="text" id="cmv2_zaraz_purpose_name" name="cmv2_zaraz_purpose_name" value="<?php echo esc_attr($options['zaraz_purpose_name']); ?>" class="regular-text" placeholder="marketing" />
-                        <p class="description">A Zaraz Purpose ID neve (általában "marketing" vagy "advertising"). Ezt a Zaraz felületén állítod be.</p>
+                        <p class="description"><strong>FONTOS:</strong> Add meg a Purpose <strong>ID-ját</strong> (nem a nevét!).<br>
+                        📍 <strong>Hol találod meg:</strong> Cloudflare Dashboard → Zaraz → Settings → Consent Management → Purposes<br>
+                        Kattints a Purpose-re és másold ki az <code>ID</code> mezőt (pl. "marketing", "analytics").<br>
+                        Ha hibát kapsz a konzolban, ellenőrizd hogy ez az ID létezik-e a Zaraz-ban.</p>
                     </td>
                 </tr>
             </table>
