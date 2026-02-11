@@ -2,11 +2,11 @@
 
 /**
  * Plugin Name: CM V2 – Minimal WP MU Plugin (Consent Mode v2)
- * Description: Minimal saját fejlesztésű consent banner WordPress-hez (MU plugin). GCM v2 default/update jelek, localStorage tárolás, preferencia-módosítás. Telepítés: place into wp-content/mu-plugins/
+ * Description: Minimal saját fejlesztésű consent banner WordPress-hez (MU plugin). GCM v2 default/update jelek, cookie alapú tárolás, preferencia-módosítás. Telepítés: place into wp-content/mu-plugins/
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.5.4
+ * Version: 2.6.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.5.4');
+define('CMV2_VERSION', '2.6.0');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));

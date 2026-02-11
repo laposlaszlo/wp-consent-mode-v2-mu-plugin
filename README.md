@@ -21,7 +21,7 @@
 ### � Google Consent Mode V2 Compliant
 - ✅ Default consent signals in `<head>` (before GTM)
 - ✅ Update consent signals after user interaction
-- ✅ localStorage persistence (180-day TTL)
+- ✅ Cookie-based persistence (180-day TTL)
 - ✅ GTM dataLayer events (`cm_update`)
 - ✅ GDPR compliant
 

@@ -27,29 +27,39 @@
     const StorageManager = {
       read: function() {
         try {
-          return JSON.parse(localStorage.getItem(LS_KEY));
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(LS_KEY + '=')) {
+              const value = cookie.substring(LS_KEY.length + 1);
+              return JSON.parse(decodeURIComponent(value));
+            }
+          }
+          return null;
         } catch(e) {
-          console.warn('CMV2: Storage read error', e);
+          console.warn('CMV2: Cookie read error', e);
           return null;
         }
       },
       
       write: function(state) {
         try {
-          localStorage.setItem(LS_KEY, JSON.stringify(state));
+          const maxAge = TTL_DAYS * 24 * 60 * 60; // seconds
+          const value = encodeURIComponent(JSON.stringify(state));
+          document.cookie = LS_KEY + '=' + value + '; path=/; max-age=' + maxAge + '; SameSite=Lax';
           return true;
         } catch(e) {
-          console.error('CMV2: Storage write error (quota exceeded?)', e);
+          console.error('CMV2: Cookie write error', e);
           return false;
         }
       },
       
       clear: function() {
         try {
-          localStorage.removeItem(LS_KEY);
+          document.cookie = LS_KEY + '=; path=/; max-age=0';
           return true;
         } catch(e) {
-          console.error('CMV2: Storage clear error', e);
+          console.error('CMV2: Cookie clear error', e);
           return false;
         }
       },

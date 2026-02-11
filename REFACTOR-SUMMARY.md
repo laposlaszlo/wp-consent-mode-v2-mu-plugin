@@ -105,9 +105,11 @@
 **Változások:**
 - Teljes átírás moduláris architektúrára
 - Új modulok:
-  - **StorageManager** - localStorage műveletek (read, write, clear, isValid)
+  - **StorageManager** - Cookie műveletek (read, write, clear, isValid)
+    - `cmv2_state` cookie 180 napos TTL-lel
+    - Path: `/`, SameSite: `Lax`
+    - encodeURIComponent/decodeURIComponent JSON adatokhoz
     - Try-catch error handling hozzáadva
-    - Storage quota exceeded kezelés
   - **ConsentManager** - Google Consent Mode integráció (setDefault, update)
   - **UIController** - DOM műveletek és UI állapot (init, showModal, hideModal, getChoices, setChoices)
   - **App** - Alkalmazás koordinátor (init, loadState, saveAndApply, bindEvents)
