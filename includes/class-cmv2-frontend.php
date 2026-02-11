@@ -24,6 +24,7 @@ class CMV2_Frontend
         // Note: If a tag is hard-coded before wp_head() in header.php, it will still run first.
         add_action('wp_head', [__CLASS__, 'render_default_consent'], 0);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
+        add_action('wp_body_open', [__CLASS__, 'render_gtm_noscript'], 0);
         add_action('wp_footer', [__CLASS__, 'render_banner'], 99);
     }
     
@@ -37,6 +38,7 @@ class CMV2_Frontend
         $analytics_status = $consent['analytics'];
         $ads_status = $consent['ads'];
         $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
+        $wait_for_update = ($analytics_status === 'granted' && $ads_status === 'granted') ? 0 : 500;
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -49,7 +51,7 @@ class CMV2_Frontend
             // Consent Mode v2 – DEFAULT:
             // - Szükséges és funkcionális engedélyezve alapértelmezettként
             // - Analytics/Ads a cookie-ban tárolt állapot alapján (ha van), különben denied
-            // - wait_for_update: 500 (GTM vár a frissítésre)
+            // - wait_for_update: 0 vagy 500 (GTM vár a frissítésre, ha nincs explicit consent)
             // - region: EU/EEA list (GDPR-only default)
             // - url_passthrough és ads_data_redaction ajánlott beállítások
             try {
@@ -63,7 +65,7 @@ class CMV2_Frontend
                     'ad_personalization': '<?php echo esc_js($ads_status); ?>',
                     'functionality_storage': 'granted',
                     'necessary_storage': 'granted',
-                    'wait_for_update': 500,
+                    'wait_for_update': <?php echo intval($wait_for_update); ?>,
                     'region': ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB', 'IS', 'LI', 'NO', 'CH']
                 });
 
@@ -94,6 +96,24 @@ class CMV2_Frontend
                 })(window,document,'script','dataLayer','<?php echo esc_js($gtm_container_id); ?>');
             </script>
         <?php endif; ?>
+        <?php
+    }
+
+    /**
+     * Render GTM noscript (recommended fallback) after body open.
+     */
+    public static function render_gtm_noscript()
+    {
+        $opts = cmv2_get_options();
+        $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
+        if (empty($gtm_container_id)) {
+            return;
+        }
+        ?>
+        <noscript>
+            <iframe src="https://www.googletagmanager.com/ns.html?id=<?php echo esc_attr($gtm_container_id); ?>"
+                    height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        </noscript>
         <?php
     }
 

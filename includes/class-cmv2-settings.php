@@ -227,12 +227,25 @@ class CMV2_Settings
 
         $options = cmv2_get_default_options();
         $saved = [];
+        $gtm_invalid = false;
 
         foreach ($options as $key => $default) {
             if (isset($_POST['cmv2_' . $key])) {
                 $value = wp_unslash($_POST['cmv2_' . $key]);
                 $sanitized = self::sanitize_option($key, $value);
                 
+                if ($key === 'gtm_container_id') {
+                    if ($value === '') {
+                        $saved[$key] = '';
+                    } elseif ($sanitized === '') {
+                        $gtm_invalid = true;
+                        $saved[$key] = '';
+                    } else {
+                        $saved[$key] = $sanitized;
+                    }
+                    continue;
+                }
+
                 if ($sanitized !== '') {
                     $saved[$key] = $sanitized;
                 }
@@ -243,7 +256,7 @@ class CMV2_Settings
         $saved['use_zaraz'] = isset($_POST['cmv2_use_zaraz']) ? true : false;
 
         update_option(CMV2_OPTION_KEY, $saved);
-        return 'success';
+        return $gtm_invalid ? 'success_with_gtm_warning' : 'success';
     }
 
     /**
@@ -323,8 +336,11 @@ class CMV2_Settings
         $import_result = self::handle_import();
 
         // Display notices
-        if ($save_result === 'success') {
+        if ($save_result === 'success' || $save_result === 'success_with_gtm_warning') {
             echo '<div class="notice notice-success is-dismissible"><p>Beállítások sikeresen mentve!</p></div>';
+        }
+        if ($save_result === 'success_with_gtm_warning') {
+            echo '<div class="notice notice-error is-dismissible"><p>Érvénytelen GTM Container ID. A mező törölve lett.</p></div>';
         }
 
         if ($import_result === 'import_success') {

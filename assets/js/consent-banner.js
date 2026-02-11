@@ -46,7 +46,8 @@
         try {
           const maxAge = TTL_DAYS * 24 * 60 * 60; // seconds
           const value = encodeURIComponent(JSON.stringify(state));
-          document.cookie = LS_KEY + '=' + value + '; path=/; max-age=' + maxAge + '; SameSite=Lax';
+          const secure = location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = LS_KEY + '=' + value + '; path=/; max-age=' + maxAge + '; SameSite=Lax' + secure;
           return true;
         } catch(e) {
           console.error('CMV2: Cookie write error', e);
@@ -231,7 +232,6 @@
         if (state && StorageManager.isValid(state)) {
           // Valid consent exists - apply but don't show modal
           UIController.setChoices(state.choices);
-          ConsentManager.update(state.choices);
           UIController.hideModal();
         } else {
           // No valid consent - show banner
