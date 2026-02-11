@@ -1,6 +1,6 @@
 /**
- * Consent Mode V2 - Frontend JavaScript
- * Handles user consent choices and Google Consent Mode integration
+ * Consent Mode V2 - Frontend JavaScript (Refactored)
+ * Modular architecture with separated concerns
  */
 
 (function(){'use strict';
@@ -19,290 +19,289 @@
     const VERSION = CONFIG.version || '2025-10-08';
     const TTL_DAYS = CONFIG.ttl_days || 180;
 
-    // Helper functions
-    function nowTs(){ 
-      return Math.floor(Date.now()/1000); 
-    }
-    
-    function days(n){ 
-      return n*24*60*60; 
-    }
-
-    function readState(){ 
-      try{ 
-        return JSON.parse(localStorage.getItem(LS_KEY)); 
-      } catch(e) { 
-        return null; 
-      } 
-    }
-  
-  function writeState(obj){ 
-    localStorage.setItem(LS_KEY, JSON.stringify(obj)); 
-  }
-  
-  function clearState(){ 
-    localStorage.removeItem(LS_KEY); 
-  }
-
-  // Google gtag helper
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ 
-    window.dataLayer.push(arguments); 
-  }
-
-  /**
-   * Set default consent (GDPR compliance)
-   * Must be called BEFORE GTM loads
-   */
-  function setDefaultConsent() {
-    // URL passthrough for cross-domain tracking
-    gtag('set', 'url_passthrough', true);
-    
-    // Ads data redaction (GDPR compliance)
-    gtag('set', 'ads_data_redaction', true);
-    
-    // Set default consent state
-    // - analytics_storage: 'granted' (functional/necessary cookies enabled by default)
-    // - ad_storage, ad_user_data, ad_personalization: 'denied' (marketing requires consent)
-    gtag('consent', 'default', {
-      ad_storage: 'denied',
-      analytics_storage: 'denied', // Functional/necessary cookies enabled by default
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      functionality_storage: 'granted',
-      necessary_storage: 'granted',
-      wait_for_update: 500, // Wait 500ms for user consent before firing tags
-      region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB','IS','LI','NO','CH'] // EU/EEA countries
-    });
-    
-    // Push default consent event to dataLayer
-    window.dataLayer.push({
-      event: 'cm_default',
-      consent_default: {
-        ad_storage: 'denied',
-        analytics_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        functionality_storage: 'granted',
-        necessary_storage: 'granted'
-      }
-    });
-  }
-
-  /**
-   * Apply consent choices to Google Consent Mode
-   */
-  function applyConsent(choices){
-    const analytics = choices.analytics ? 'granted' : 'denied';
-    const ads = choices.ads ? 'granted' : 'denied';
-
-    gtag('consent', 'update', {
-      'ad_storage': ads,
-      'analytics_storage': analytics,
-      'ad_user_data': ads,
-      'ad_personalization': ads
-    });
-
-    window.dataLayer.push({
-      event: 'cm_update',
-      cmv2_version: VERSION,
-      cmv2_analytics: analytics,
-      cmv2_ads: ads
-    });
-  }
-
-  // DOM elements - declared first
-  let modal, btnOpen, chkAnalytics, chkAds, btnSave;
-  let btnAcceptAllSimple, btnAcceptAllDetailed, btnCustomize;
-  let simpleView, detailedView;
-
-  /**
-   * Show modal
-   */
-  function showModal(){ 
-    if (!modal) return;
-    modal.classList.remove('cmv2-hidden'); 
-    modal.setAttribute('aria-hidden','false');
-    document.body.style.overflow = 'hidden';
-  }
-  
-  /**
-   * Hide modal
-   */
-  function hideModal(){ 
-    if (!modal) return;
-    modal.classList.add('cmv2-hidden'); 
-    modal.setAttribute('aria-hidden','true'); 
-    document.body.style.overflow = '';
-  }
-
-  /**
-   * Show simple view (2 buttons)
-   */
-  function showSimpleView() {
-    if (simpleView) simpleView.classList.remove('cmv2-hidden');
-    if (detailedView) detailedView.classList.add('cmv2-hidden');
-  }
-
-  /**
-   * Show detailed view (with toggles)
-   */
-  function showDetailedView() {
-    if (simpleView) simpleView.classList.add('cmv2-hidden');
-    if (detailedView) detailedView.classList.remove('cmv2-hidden');
-  }
-
-  /**
-   * Initialize DOM elements and event handlers
-   */
-  function initDOM() {
-    modal = document.getElementById('cmv2-modal');
-    btnOpen = document.getElementById('cmv2-open');
-    chkAnalytics = document.getElementById('cmv2-analytics');
-    chkAds = document.getElementById('cmv2-ads');
-    btnAcceptAllSimple = document.getElementById('cmv2-accept-all-simple');
-    btnAcceptAllDetailed = document.getElementById('cmv2-accept-all-detailed');
-    btnCustomize = document.getElementById('cmv2-customize');
-    btnSave = document.getElementById('cmv2-save');
-    simpleView = document.getElementById('cmv2-simple-view');
-    detailedView = document.getElementById('cmv2-detailed-view');
-
-    // Check if modal exists
-    if (!modal) {
-      console.warn('CMV2: Modal element not found');
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Initialize on page load
-   */
-  (function initConsent(){ 
-    // Set default consent BEFORE anything else
-    setDefaultConsent();
-    
-    // Wait for DOM to be ready
-    if (!initDOM()) {
-      console.error('CMV2: Failed to initialize DOM elements');
-      return;
-    }
-
-    try {
-      const st = readState();
-      if (st && st.version === VERSION && (nowTs() - (st.ts||0)) < days(TTL_DAYS)) {
-        // Valid consent exists - apply it but DON'T show modal
-        if (chkAnalytics) chkAnalytics.checked = !!st.choices.analytics;
-        if (chkAds) chkAds.checked = !!st.choices.ads;
-        applyConsent(st.choices);
-        hideModal();
-      } else {
-        // No consent or expired - ALWAYS show banner on first visit
-        showSimpleView();
-        showModal();
-      }
-    } catch(e) { 
-      console.error('CMV2 Error:', e);
-      showSimpleView();
-      showModal(); 
-    }
-  })();
-
-  /**
-   * Event handlers
-   */
-  
-  // Open button (cookie icon)
-  if (btnOpen) {
-    btnOpen.addEventListener('click', function() {
-      showSimpleView();
-      showModal();
-    });
-  }
-  
-  // Accept all button (simple view)
-  if (btnAcceptAllSimple) {
-    btnAcceptAllSimple.addEventListener('click', function(){
-      if (chkAnalytics) chkAnalytics.checked = true;
-      if (chkAds) chkAds.checked = true;
-      saveAndApply();
-    });
-  }
-
-  // Customize button (simple view -> detailed view)
-  if (btnCustomize) {
-    btnCustomize.addEventListener('click', function(){
-      showDetailedView();
-    });
-  }
-  
-  // Accept all button (detailed view)
-  if (btnAcceptAllDetailed) {
-    btnAcceptAllDetailed.addEventListener('click', function(){
-      if (chkAnalytics) chkAnalytics.checked = true;
-      if (chkAds) chkAds.checked = true;
-      saveAndApply();
-    });
-  }
-  
-  // Save button (detailed view)
-  if (btnSave) {
-    btnSave.addEventListener('click', saveAndApply);
-  }
-  
-  // Backdrop click - DISABLED (user must make a choice)
-  // if (modal) {
-  //   const backdrop = modal.querySelector('.cmv2-backdrop');
-  //   if (backdrop) {
-  //     backdrop.addEventListener('click', function(e){
-  //       if (e.target === this) {
-  //         hideModal();
-  //       }
-  //     });
-  //   }
-  // }
-  
-  // ESC key - DISABLED (user must make a choice)
-  // document.addEventListener('keydown', function(e){
-  //   if (e.key === 'Escape' && modal && !modal.classList.contains('cmv2-hidden')) {
-  //     hideModal();
-  //   }
-  // });
-
-  /**
-   * Save consent and apply
-   */
-  function saveAndApply(){
-    const state = {
-      version: VERSION,
-      ts: nowTs(),
-      choices: {
-        analytics: chkAnalytics ? !!chkAnalytics.checked : false,
-        ads: chkAds ? !!chkAds.checked : false
+    // ======================
+    // Storage Manager Module
+    // ======================
+    const StorageManager = {
+      read: function() {
+        try {
+          return JSON.parse(localStorage.getItem(LS_KEY));
+        } catch(e) {
+          console.warn('CMV2: Storage read error', e);
+          return null;
+        }
+      },
+      
+      write: function(state) {
+        try {
+          localStorage.setItem(LS_KEY, JSON.stringify(state));
+          return true;
+        } catch(e) {
+          console.error('CMV2: Storage write error (quota exceeded?)', e);
+          return false;
+        }
+      },
+      
+      clear: function() {
+        try {
+          localStorage.removeItem(LS_KEY);
+          return true;
+        } catch(e) {
+          console.error('CMV2: Storage clear error', e);
+          return false;
+        }
+      },
+      
+      isValid: function(state) {
+        if (!state || state.version !== VERSION) {
+          return false;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        const ttlSeconds = TTL_DAYS * 24 * 60 * 60;
+        return (now - (state.ts || 0)) < ttlSeconds;
       }
     };
-    writeState(state);
-    applyConsent(state.choices);
-    hideModal();
-  }
 
-  /**
-   * Public API
-   */
-  window.CM = window.CM || {
-    open: function() {
-      showSimpleView();
-      showModal();
-    },
-    reset: function(){ 
-      clearState();
-      showSimpleView();
-      showModal(); 
-    },
-    get: readState
-  };
-  
+    // ======================
+    // Consent Manager Module
+    // ======================
+    const ConsentManager = {
+      gtag: function() {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push(arguments);
+      },
+      
+      setDefault: function() {
+        this.gtag('set', 'url_passthrough', true);
+        this.gtag('set', 'ads_data_redaction', true);
+        
+        this.gtag('consent', 'default', {
+          ad_storage: 'denied',
+          analytics_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          functionality_storage: 'granted',
+          necessary_storage: 'granted',
+          wait_for_update: 500,
+          region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB','IS','LI','NO','CH']
+        });
+        
+        window.dataLayer.push({
+          event: 'cm_default',
+          consent_default: {
+            ad_storage: 'denied',
+            analytics_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            functionality_storage: 'granted',
+            necessary_storage: 'granted'
+          }
+        });
+      },
+      
+      update: function(choices) {
+        const analytics = choices.analytics ? 'granted' : 'denied';
+        const ads = choices.ads ? 'granted' : 'denied';
+
+        this.gtag('consent', 'update', {
+          ad_storage: ads,
+          analytics_storage: analytics,
+          ad_user_data: ads,
+          ad_personalization: ads
+        });
+
+        window.dataLayer.push({
+          event: 'cm_update',
+          cmv2_version: VERSION,
+          cmv2_analytics: analytics,
+          cmv2_ads: ads
+        });
+      }
+    };
+
+    // ======================
+    // UI Controller Module
+    // ======================
+    const UIController = {
+      elements: {},
+      
+      init: function() {
+        this.elements = {
+          modal: document.getElementById('cmv2-modal'),
+          btnOpen: document.getElementById('cmv2-open'),
+          chkAnalytics: document.getElementById('cmv2-analytics'),
+          chkAds: document.getElementById('cmv2-ads'),
+          btnAcceptAllSimple: document.getElementById('cmv2-accept-all-simple'),
+          btnAcceptAllDetailed: document.getElementById('cmv2-accept-all-detailed'),
+          btnCustomize: document.getElementById('cmv2-customize'),
+          btnSave: document.getElementById('cmv2-save'),
+          simpleView: document.getElementById('cmv2-simple-view'),
+          detailedView: document.getElementById('cmv2-detailed-view')
+        };
+        
+        return this.elements.modal !== null;
+      },
+      
+      showModal: function() {
+        if (!this.elements.modal) return;
+        this.elements.modal.classList.remove('cmv2-hidden');
+        this.elements.modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      },
+      
+      hideModal: function() {
+        if (!this.elements.modal) return;
+        this.elements.modal.classList.add('cmv2-hidden');
+        this.elements.modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      },
+      
+      showSimpleView: function() {
+        if (this.elements.simpleView) this.elements.simpleView.classList.remove('cmv2-hidden');
+        if (this.elements.detailedView) this.elements.detailedView.classList.add('cmv2-hidden');
+      },
+      
+      showDetailedView: function() {
+        if (this.elements.simpleView) this.elements.simpleView.classList.add('cmv2-hidden');
+        if (this.elements.detailedView) this.elements.detailedView.classList.remove('cmv2-hidden');
+      },
+      
+      getChoices: function() {
+        return {
+          analytics: this.elements.chkAnalytics ? this.elements.chkAnalytics.checked : false,
+          ads: this.elements.chkAds ? this.elements.chkAds.checked : false
+        };
+      },
+      
+      setChoices: function(choices) {
+        if (this.elements.chkAnalytics) this.elements.chkAnalytics.checked = !!choices.analytics;
+        if (this.elements.chkAds) this.elements.chkAds.checked = !!choices.ads;
+      },
+      
+      acceptAll: function() {
+        if (this.elements.chkAnalytics) this.elements.chkAnalytics.checked = true;
+        if (this.elements.chkAds) this.elements.chkAds.checked = true;
+      }
+    };
+
+    // ======================
+    // Application Controller
+    // ======================
+    const App = {
+      init: function() {
+        // Set default consent first
+        try {
+          ConsentManager.setDefault();
+        } catch(e) {
+          console.error('CMV2: Consent default init failed', e);
+        }
+        
+        // Initialize UI
+        if (!UIController.init()) {
+          console.error('CMV2: Modal element not found');
+          return;
+        }
+        
+        // Load saved state
+        this.loadState();
+        
+        // Bind event handlers
+        this.bindEvents();
+      },
+      
+      loadState: function() {
+        const state = StorageManager.read();
+        
+        if (state && StorageManager.isValid(state)) {
+          // Valid consent exists - apply but don't show modal
+          UIController.setChoices(state.choices);
+          ConsentManager.update(state.choices);
+          UIController.hideModal();
+        } else {
+          // No valid consent - show banner
+          UIController.showSimpleView();
+          UIController.showModal();
+        }
+      },
+      
+      saveAndApply: function() {
+        const choices = UIController.getChoices();
+        const state = {
+          version: VERSION,
+          ts: Math.floor(Date.now() / 1000),
+          choices: choices
+        };
+        
+        if (StorageManager.write(state)) {
+          ConsentManager.update(choices);
+          UIController.hideModal();
+        } else {
+          console.error('CMV2: Failed to save consent');
+        }
+      },
+      
+      bindEvents: function() {
+        const self = this;
+        const el = UIController.elements;
+        
+        // Open button
+        if (el.btnOpen) {
+          el.btnOpen.addEventListener('click', function() {
+            UIController.showSimpleView();
+            UIController.showModal();
+          });
+        }
+        
+        // Accept all buttons (both views use same handler)
+        const acceptAllHandler = function() {
+          UIController.acceptAll();
+          self.saveAndApply();
+        };
+        
+        if (el.btnAcceptAllSimple) {
+          el.btnAcceptAllSimple.addEventListener('click', acceptAllHandler);
+        }
+        
+        if (el.btnAcceptAllDetailed) {
+          el.btnAcceptAllDetailed.addEventListener('click', acceptAllHandler);
+        }
+        
+        // Customize button
+        if (el.btnCustomize) {
+          el.btnCustomize.addEventListener('click', function() {
+            UIController.showDetailedView();
+          });
+        }
+        
+        // Save button
+        if (el.btnSave) {
+          el.btnSave.addEventListener('click', function() {
+            self.saveAndApply();
+          });
+        }
+      }
+    };
+
+    // Start application
+    try {
+      App.init();
+    } catch(e) {
+      console.error('CMV2: Initialization failed', e);
+    }
+
+    // Public API
+    window.CM = window.CM || {
+      open: function() {
+        UIController.showSimpleView();
+        UIController.showModal();
+      },
+      reset: function() {
+        StorageManager.clear();
+        UIController.showSimpleView();
+        UIController.showModal();
+      },
+      get: StorageManager.read
+    };
   } // end init()
   
 })();

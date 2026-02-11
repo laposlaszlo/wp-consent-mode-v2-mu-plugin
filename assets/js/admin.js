@@ -20,69 +20,8 @@ jQuery(document).ready(function($) {
         $('.cmv2-color-picker').wpColorPicker();
     }
     
-    // Color Presets
-    const presets = {
-        default: {
-            primary_color: '#111111',
-            primary_text_color: '#ffffff',
-            secondary_color: '#ffffff',
-            secondary_text_color: '#000000',
-            background_color: '#ffffff',
-            text_color: '#000000',
-            border_color: '#d0d0d0',
-            link_color: '#0066cc'
-        },
-        blue: {
-            primary_color: '#0066cc',
-            primary_text_color: '#ffffff',
-            secondary_color: '#e6f2ff',
-            secondary_text_color: '#0066cc',
-            background_color: '#ffffff',
-            text_color: '#2c3e50',
-            border_color: '#b3d9ff',
-            link_color: '#0052a3'
-        },
-        green: {
-            primary_color: '#2ecc71',
-            primary_text_color: '#ffffff',
-            secondary_color: '#f0fff4',
-            secondary_text_color: '#27ae60',
-            background_color: '#ffffff',
-            text_color: '#2c3e50',
-            border_color: '#a8e6cf',
-            link_color: '#27ae60'
-        },
-        purple: {
-            primary_color: '#9b59b6',
-            primary_text_color: '#ffffff',
-            secondary_color: '#f4ecf7',
-            secondary_text_color: '#8e44ad',
-            background_color: '#ffffff',
-            text_color: '#34495e',
-            border_color: '#d7bde2',
-            link_color: '#8e44ad'
-        },
-        dark: {
-            primary_color: '#ffffff',
-            primary_text_color: '#000000',
-            secondary_color: '#333333',
-            secondary_text_color: '#ffffff',
-            background_color: '#1a1a1a',
-            text_color: '#ffffff',
-            border_color: '#444444',
-            link_color: '#4a9eff'
-        },
-        orange: {
-            primary_color: '#ff6b35',
-            primary_text_color: '#ffffff',
-            secondary_color: '#fff5f0',
-            secondary_text_color: '#d35400',
-            background_color: '#ffffff',
-            text_color: '#2c3e50',
-            border_color: '#ffccbc',
-            link_color: '#e74c3c'
-        }
-    };
+    // Color Presets from PHP
+    const presets = window.CMV2_ADMIN && window.CMV2_ADMIN.presets ? window.CMV2_ADMIN.presets : {};
     
     // Preset button click handler
     $('.preset-btn').on('click', function(e) {

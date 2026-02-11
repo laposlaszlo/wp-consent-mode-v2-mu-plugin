@@ -1,21 +1,4 @@
-/* Consent Mode V2 Banner Styles - with CSS Custom Properties */
-
-/* CSS Custom Properties (values will be overridden by inline styles) */
-:root {
-    --cmv2-z-modal: 2147483647;
-    --cmv2-z-open-btn: 2147483646;
-    --cmv2-spacing-base: 8px;
-    --cmv2-spacing-2x: 16px;
-    --cmv2-spacing-3x: 24px;
-    --cmv2-border-radius-sm: 8px;
-    --cmv2-border-radius-md: 10px;
-    --cmv2-border-radius-lg: 12px;
-    --cmv2-border-radius-full: 999px;
-    --cmv2-shadow-sm: 0 2px 10px rgba(0,0,0,0.2);
-    --cmv2-shadow-md: 0 4px 12px rgba(0,0,0,0.18);
-    --cmv2-shadow-lg: 0 10px 40px rgba(0,0,0,0.2);
-    --cmv2-shadow-hover: 0 6px 20px rgba(0,0,0,0.3);
-}
+/* Consent Mode V2 Banner Styles */
 
 /* Modal container */
 #cmv2-modal.cmv2-hidden { 
@@ -25,7 +8,7 @@
 #cmv2-modal { 
     position: fixed; 
     inset: 0; 
-    z-index: var(--cmv2-z-modal);
+    z-index: 2147483647;
     animation: cmv2-fadeIn 0.3s ease-out;
 }
 
@@ -41,8 +24,8 @@
     position: relative; 
     max-width: 680px; 
     margin: 10vh auto; 
-    box-shadow: var(--cmv2-shadow-lg);
-    padding: var(--cmv2-spacing-3x);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: 24px;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     animation: cmv2-slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -79,12 +62,12 @@
 
 /* Typography */
 #cmv2-modal h2 { 
-    margin: 0 0 var(--cmv2-spacing-base); 
+    margin: 0 0 8px; 
     font-size: 22px; 
 }
 
 #cmv2-modal p { 
-    margin: var(--cmv2-spacing-base) 0; 
+    margin: 8px 0; 
     line-height: 1.5; 
 }
 
@@ -107,7 +90,7 @@
 
 /* Groups (detailed view) */
 .cmv2-groups { 
-    margin-top: var(--cmv2-spacing-2x); 
+    margin-top: 16px; 
     margin-bottom: 20px;
 }
 
@@ -144,7 +127,7 @@
 /* Actions (buttons) */
 .cmv2-actions { 
     display: flex; 
-    gap: var(--cmv2-border-radius-lg); 
+    gap: 12px; 
     margin-top: 20px; 
     flex-wrap: wrap; 
 }
@@ -158,17 +141,17 @@
 #cmv2-simple-view .cmv2-actions .cmv2-btn {
     width: 100%;
     text-align: center;
-    padding: var(--cmv2-spacing-2x) var(--cmv2-spacing-3x);
+    padding: 16px 24px;
     font-size: 16px;
     font-weight: 700;
-    border-radius: var(--cmv2-border-radius-md);
+    border-radius: 10px;
 }
 
 /* Detailed view - normal buttons in row */
 #cmv2-detailed-view .cmv2-actions {
     flex-direction: row;
     justify-content: flex-end;
-    gap: var(--cmv2-border-radius-lg);
+    gap: 12px;
 }
 
 #cmv2-detailed-view .cmv2-actions .cmv2-btn {
@@ -178,8 +161,8 @@
 /* Buttons */
 .cmv2-btn {
     background: #f8f8f8; 
-    padding: var(--cmv2-border-radius-lg) 20px; 
-    border-radius: var(--cmv2-border-radius-sm);
+    padding: 12px 20px; 
+    border-radius: 8px;
     cursor: pointer; 
     font-weight: 600;
     transition: all 0.2s ease;
@@ -191,7 +174,7 @@
 
 .cmv2-btn:hover {
     transform: translateY(-2px);
-    box-shadow: var(--cmv2-shadow-md);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
 }
 
 .cmv2-btn:active {
@@ -210,15 +193,15 @@
 /* Cookie settings button (reopener) */
 .cmv2-open {
     position: fixed; 
-    left: var(--cmv2-spacing-2x); 
-    bottom: var(--cmv2-spacing-2x); 
-    z-index: var(--cmv2-z-open-btn);
-    border-radius: var(--cmv2-border-radius-full); 
-    padding: var(--cmv2-border-radius-lg) 18px; 
+    left: 16px; 
+    bottom: 16px; 
+    z-index: 2147483646;
+    border-radius: 999px; 
+    padding: 12px 18px; 
     cursor: pointer;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     font-weight: 600;
-    box-shadow: var(--cmv2-shadow-sm);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: all 0.2s ease;
     border: none;
     outline: none;
@@ -227,13 +210,13 @@
 
 .cmv2-open:hover {
     transform: translateY(-3px);
-    box-shadow: var(--cmv2-shadow-hover);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
 
 /* Responsive */
 @media (max-width: 480px) {
     #cmv2-modal .cmv2-window { 
-        margin: 4vh var(--cmv2-spacing-base); 
+        margin: 4vh 8px; 
         padding: 20px; 
     }
     
