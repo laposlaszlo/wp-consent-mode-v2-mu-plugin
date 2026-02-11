@@ -15,7 +15,9 @@ class CMV2_Frontend
      */
     public static function init()
     {
-        add_action('wp_head', [__CLASS__, 'render_default_consent'], 0);
+        // Use PHP_INT_MIN priority to ensure consent default runs BEFORE GTM
+        // This prevents "consent state read before default set" warning
+        add_action('wp_head', [__CLASS__, 'render_default_consent'], PHP_INT_MIN);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
         add_action('wp_footer', [__CLASS__, 'render_banner'], 99);
     }
