@@ -116,17 +116,7 @@ class CMV2_Frontend
      */
     private static function generate_custom_css($opts)
     {
-        $position = $opts['popup_position'];
-        $position_class = '';
-        
-        if ($position === 'bottom-left') {
-            $position_class = '#cmv2-modal .cmv2-window { margin: auto auto 20px 20px; max-width: 480px; }';
-        } elseif ($position === 'bottom-right') {
-            $position_class = '#cmv2-modal .cmv2-window { margin: auto 20px 20px auto; max-width: 480px; }';
-        }
-        
         $css = "
-        {$position_class}
         #cmv2-modal .cmv2-backdrop { background: {$opts['backdrop_color']}; }
         #cmv2-modal .cmv2-window {
             background: {$opts['background_color']};
@@ -166,8 +156,16 @@ class CMV2_Frontend
     public static function render_banner()
     {
         $opts = cmv2_get_options();
+        
+        // Determine position class
+        $position_class = '';
+        if ($opts['popup_position'] === 'bottom-left') {
+            $position_class = ' cmv2-position-bottom-left';
+        } elseif ($opts['popup_position'] === 'bottom-right') {
+            $position_class = ' cmv2-position-bottom-right';
+        }
         ?>
-        <div id="cmv2-modal" class="cmv2-hidden" aria-hidden="true" role="dialog" aria-labelledby="cmv2-title" aria-modal="true">
+        <div id="cmv2-modal" class="cmv2-hidden<?php echo esc_attr($position_class); ?>" aria-hidden="true" role="dialog" aria-labelledby="cmv2-title" aria-modal="true">
             <div class="cmv2-backdrop"></div>
             <div class="cmv2-window" role="document">
                 <h2 id="cmv2-title"><?php echo esc_html($opts['title']); ?></h2>

@@ -6,7 +6,7 @@
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.4.0
+ * Version: 2.4.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
