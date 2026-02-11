@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.4.0');
+define('CMV2_VERSION', '2.4.2');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));
