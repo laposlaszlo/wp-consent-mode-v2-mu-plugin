@@ -16,8 +16,78 @@
     // Configuration from PHP
     const CONFIG = window.CMV2_CONFIG || {};
     const LS_KEY = 'cmv2_state';
+    const LANG_KEY = 'cmv2_language';
     const VERSION = CONFIG.version || '2025-10-08';
     const TTL_DAYS = CONFIG.ttl_days || 180;
+    const TRANSLATIONS = CONFIG.translations || {};
+    const DEFAULT_LANGUAGE = CONFIG.default_language || 'hu';
+
+    // ======================
+    // Language Manager Module
+    // ======================
+    const LanguageManager = {
+      currentLanguage: DEFAULT_LANGUAGE,
+      
+      init: function() {
+        // Load language from localStorage or use default
+        const saved = this.getStoredLanguage();
+        this.currentLanguage = saved || DEFAULT_LANGUAGE;
+        this.applyLanguage(this.currentLanguage);
+        this.updateActiveButton();
+      },
+      
+      getStoredLanguage: function() {
+        try {
+          return localStorage.getItem(LANG_KEY);
+        } catch(e) {
+          return null;
+        }
+      },
+      
+      setStoredLanguage: function(lang) {
+        try {
+          localStorage.setItem(LANG_KEY, lang);
+          return true;
+        } catch(e) {
+          return false;
+        }
+      },
+      
+      changeLanguage: function(lang) {
+        if (!TRANSLATIONS[lang]) {
+          console.warn('CMV2: Unknown language', lang);
+          return false;
+        }
+        this.currentLanguage = lang;
+        this.setStoredLanguage(lang);
+        this.applyLanguage(lang);
+        this.updateActiveButton();
+        return true;
+      },
+      
+      applyLanguage: function(lang) {
+        const texts = TRANSLATIONS[lang];
+        if (!texts) return;
+        
+        // Update all elements with data-i18n attribute
+        document.querySelectorAll('[data-i18n]').forEach(function(el) {
+          const key = el.getAttribute('data-i18n');
+          if (texts[key]) {
+            el.textContent = texts[key];
+          }
+        });
+      },
+      
+      updateActiveButton: function() {
+        document.querySelectorAll('.cmv2-lang-btn').forEach(function(btn) {
+          if (btn.getAttribute('data-lang') === LanguageManager.currentLanguage) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+    };
 
     // ======================
     // Storage Manager Module
@@ -170,6 +240,9 @@
           return;
         }
         
+        // Initialize language
+        LanguageManager.init();
+        
         // Load saved state
         this.loadState();
         
@@ -247,6 +320,14 @@
             self.saveAndApply();
           });
         }
+        
+        // Language buttons
+        document.querySelectorAll('.cmv2-lang-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const lang = this.getAttribute('data-lang');
+            LanguageManager.changeLanguage(lang);
+          });
+        });
       }
     };
 

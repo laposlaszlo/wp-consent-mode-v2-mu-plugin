@@ -107,7 +107,11 @@ class CMV2_Frontend
         wp_localize_script('cmv2-banner-js', 'CMV2_CONFIG', [
             'version' => CMV2_CONSENT_VERSION,
             'ttl_days' => intval($opts['ttl_days']),
-            'popup_position' => $opts['popup_position']
+            'popup_position' => $opts['popup_position'],
+            'translations' => cmv2_get_translations(),
+            'default_language' => $opts['default_language'],
+            'available_languages' => $opts['available_languages'],
+            'show_language_selector' => $opts['show_language_selector']
         ]);
     }
 
@@ -168,15 +172,25 @@ class CMV2_Frontend
         <div id="cmv2-modal" class="cmv2-hidden<?php echo esc_attr($position_class); ?>" aria-hidden="true" role="dialog" aria-labelledby="cmv2-title" aria-modal="true">
             <div class="cmv2-backdrop"></div>
             <div class="cmv2-window" role="document">
-                <h2 id="cmv2-title"><?php echo esc_html($opts['title']); ?></h2>
-                <p><?php echo esc_html($opts['description']); ?></p>
-                <p><a href="<?php echo esc_url($opts['privacy_link_url']); ?>" target="_blank" rel="noopener"><?php echo esc_html($opts['privacy_link_text']); ?></a></p>
+                <?php if ($opts['show_language_selector']): ?>
+                    <div class="cmv2-language-selector">
+                        <?php foreach ($opts['available_languages'] as $lang): ?>
+                            <button class="cmv2-lang-btn" data-lang="<?php echo esc_attr($lang); ?>" aria-label="<?php echo esc_attr(strtoupper($lang)); ?>">
+                                <?php echo esc_html(strtoupper($lang)); ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                
+                <h2 id="cmv2-title" data-i18n="title"><?php echo esc_html($opts['title']); ?></h2>
+                <p data-i18n="description"><?php echo esc_html($opts['description']); ?></p>
+                <p><a href="<?php echo esc_url($opts['privacy_link_url']); ?>" target="_blank" rel="noopener" data-i18n="privacy_link_text"><?php echo esc_html($opts['privacy_link_text']); ?></a></p>
 
                 <!-- Egyszerű nézet (alapértelmezett) -->
                 <div id="cmv2-simple-view" class="cmv2-view">
                     <div class="cmv2-actions">
-                        <button id="cmv2-accept-all-simple" class="cmv2-btn cmv2-primary cmv2-btn-large"><?php echo esc_html($opts['accept_all_text']); ?></button>
-                        <button id="cmv2-customize" class="cmv2-btn cmv2-secondary cmv2-btn-large">Testreszabás</button>
+                        <button id="cmv2-accept-all-simple" class="cmv2-btn cmv2-primary cmv2-btn-large" data-i18n="accept_all_text"><?php echo esc_html($opts['accept_all_text']); ?></button>
+                        <button id="cmv2-customize" class="cmv2-btn cmv2-secondary cmv2-btn-large" data-i18n="customize_text">Testreszabás</button>
                     </div>
                 </div>
 
@@ -184,22 +198,22 @@ class CMV2_Frontend
                 <div id="cmv2-detailed-view" class="cmv2-view cmv2-hidden">
                     <div class="cmv2-groups">
                         <label class="cmv2-row cmv2-disabled">
-                            <span><?php echo esc_html($opts['necessary_label']); ?></span>
+                            <span data-i18n="necessary_label"><?php echo esc_html($opts['necessary_label']); ?></span>
                             <input type="checkbox" checked disabled aria-label="<?php echo esc_attr($opts['necessary_label']); ?>" />
                         </label>
                         <label class="cmv2-row">
-                            <span><?php echo esc_html($opts['analytics_label']); ?></span>
+                            <span data-i18n="analytics_label"><?php echo esc_html($opts['analytics_label']); ?></span>
                             <input id="cmv2-analytics" type="checkbox" aria-label="<?php echo esc_attr($opts['analytics_label']); ?>" />
                         </label>
                         <label class="cmv2-row">
-                            <span><?php echo esc_html($opts['ads_label']); ?></span>
+                            <span data-i18n="ads_label"><?php echo esc_html($opts['ads_label']); ?></span>
                             <input id="cmv2-ads" type="checkbox" aria-label="<?php echo esc_attr($opts['ads_label']); ?>" />
                         </label>
                     </div>
-
+ data-i18n="open_button_text"
                     <div class="cmv2-actions">
-                        <button id="cmv2-accept-all-detailed" class="cmv2-btn cmv2-primary"><?php echo esc_html($opts['accept_all_text']); ?></button>
-                        <button id="cmv2-save" class="cmv2-btn cmv2-secondary"><?php echo esc_html($opts['save_text']); ?></button>
+                        <button id="cmv2-accept-all-detailed" class="cmv2-btn cmv2-primary" data-i18n="accept_all_text"><?php echo esc_html($opts['accept_all_text']); ?></button>
+                        <button id="cmv2-save" class="cmv2-btn cmv2-secondary" data-i18n="save_text"><?php echo esc_html($opts['save_text']); ?></button>
                     </div>
                 </div>
             </div>

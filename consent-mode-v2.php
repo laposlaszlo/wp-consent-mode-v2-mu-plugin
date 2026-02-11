@@ -6,7 +6,7 @@
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.4.2
+ * Version: 2.4.3
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.4.2');
+define('CMV2_VERSION', '2.4.3');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));
@@ -34,11 +34,57 @@ define('CMV2_LS_KEY', 'cmv2_state');
 require_once CMV2_PLUGIN_DIR . '/includes/class-cmv2-settings.php';
 require_once CMV2_PLUGIN_DIR . '/includes/class-cmv2-frontend.php';
 
+// Többnyelvű szövegek
+function cmv2_get_translations()
+{
+    return [
+        'hu' => [
+            'title' => 'Sütibeállítások',
+            'description' => 'Az oldal sütiket és hasonló technológiákat használ a működéshez, statisztikához és hirdetésekhez. A nem feltétlenül szükséges elemeket csak az engedélyed után aktiváljuk.',
+            'privacy_link_text' => 'Adatkezelési tájékoztató',
+            'necessary_label' => 'Szükséges',
+            'analytics_label' => 'Analitika (GA4)',
+            'ads_label' => 'Hirdetés & Marketing (Google Ads, Meta)',
+            'accept_all_text' => 'Elfogadok mindent',
+            'reject_all_text' => 'Csak szükséges',
+            'save_text' => 'Mentés',
+            'open_button_text' => 'Sütibeállítások',
+            'customize_text' => 'Testreszabás',
+        ],
+        'en' => [
+            'title' => 'Cookie Settings',
+            'description' => 'This website uses cookies and similar technologies for functionality, statistics, and advertising. Non-essential elements are only activated after your consent.',
+            'privacy_link_text' => 'Privacy Policy',
+            'necessary_label' => 'Necessary',
+            'analytics_label' => 'Analytics (GA4)',
+            'ads_label' => 'Advertising & Marketing (Google Ads, Meta)',
+            'accept_all_text' => 'Accept All',
+            'reject_all_text' => 'Necessary Only',
+            'save_text' => 'Save',
+            'open_button_text' => 'Cookie Settings',
+            'customize_text' => 'Customize',
+        ],
+        'fr' => [
+            'title' => 'Paramètres des cookies',
+            'description' => 'Ce site utilise des cookies et des technologies similaires pour le fonctionnement, les statistiques et la publicité. Les éléments non essentiels ne sont activés qu\'avec votre consentement.',
+            'privacy_link_text' => 'Politique de confidentialité',
+            'necessary_label' => 'Nécessaire',
+            'analytics_label' => 'Analytique (GA4)',
+            'ads_label' => 'Publicité & Marketing (Google Ads, Meta)',
+            'accept_all_text' => 'Tout accepter',
+            'reject_all_text' => 'Nécessaire uniquement',
+            'save_text' => 'Enregistrer',
+            'open_button_text' => 'Paramètres des cookies',
+            'customize_text' => 'Personnaliser',
+        ],
+    ];
+}
+
 // Alapértelmezett beállítások
 function cmv2_get_default_options()
 {
     return [
-        // Szövegek
+        // Szövegek (magyar alapértelmezett)
         'title' => 'Sütibeállítások',
         'description' => 'Az oldal sütiket és hasonló technológiákat használ a működéshez, statisztikához és hirdetésekhez. A nem feltétlenül szükséges elemeket csak az engedélyed után aktiváljuk.',
         'privacy_link_text' => 'Adatkezelési tájékoztató',
@@ -50,6 +96,11 @@ function cmv2_get_default_options()
         'reject_all_text' => 'Csak szükséges',
         'save_text' => 'Mentés',
         'open_button_text' => 'Sütibeállítások',
+
+        // Nyelv beállítások
+        'default_language' => 'hu',
+        'available_languages' => ['hu', 'en', 'fr'],
+        'show_language_selector' => true,
 
         // Színek
         'primary_color' => '#111111',
