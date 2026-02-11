@@ -96,11 +96,14 @@ function cmv2_get_default_options()
         'reject_all_text' => 'Csak szükséges',
         'save_text' => 'Mentés',
         'open_button_text' => 'Sütibeállítások',
+        'customize_text' => 'Testreszabás',
 
-        // Nyelv beállítások
+        // Nyelv beállítás
         'default_language' => 'hu',
-        'available_languages' => ['hu', 'en', 'fr'],
-        'show_language_selector' => true,
+
+        // Zaraz beállítások (Cloudflare)
+        'use_zaraz' => false,
+        'zaraz_purpose_name' => 'marketing',
 
         // Színek
         'primary_color' => '#111111',
@@ -126,7 +129,19 @@ function cmv2_get_options()
 {
     $defaults = cmv2_get_default_options();
     $saved = get_option(CMV2_OPTION_KEY, []);
-    return wp_parse_args($saved, $defaults);
+    $options = wp_parse_args($saved, $defaults);
+    
+    // Nyelvspecifikus szövegek betöltése
+    $translations = cmv2_get_translations();
+    $lang = isset($options['default_language']) ? $options['default_language'] : 'hu';
+    
+    if (isset($translations[$lang])) {
+        foreach ($translations[$lang] as $key => $value) {
+            $options[$key] = $value;
+        }
+    }
+    
+    return $options;
 }
 
 // Initialize classes

@@ -20,8 +20,25 @@ jQuery(document).ready(function($) {
         $('.cmv2-color-picker').wpColorPicker();
     }
     
-    // Color Presets from PHP
+    // Color Presets and Translations from PHP
     const presets = window.CMV2_ADMIN && window.CMV2_ADMIN.presets ? window.CMV2_ADMIN.presets : {};
+    const translations = window.CMV2_ADMIN && window.CMV2_ADMIN.translations ? window.CMV2_ADMIN.translations : {};
+    
+    // Language selector change handler
+    $('#cmv2_default_language').on('change', function() {
+        const lang = $(this).val();
+        const texts = translations[lang];
+        
+        if (texts) {
+            // Update text fields with translations
+            $.each(texts, function(key, value) {
+                const input = $('#cmv2_' + key);
+                if (input.length && input.is('input[type="text"], textarea')) {
+                    input.val(value);
+                }
+            });
+        }
+    });
     
     // Preset button click handler
     $('.preset-btn').on('click', function(e) {

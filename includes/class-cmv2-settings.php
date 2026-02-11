@@ -65,9 +65,10 @@ class CMV2_Settings
             true
         );
 
-        // Pass color presets to JavaScript
+        // Pass color presets and translations to JavaScript
         wp_localize_script('cmv2-admin-js', 'CMV2_ADMIN', [
-            'presets' => self::get_color_presets()
+            'presets' => self::get_color_presets(),
+            'translations' => cmv2_get_translations()
         ]);
     }
 
@@ -183,8 +184,12 @@ class CMV2_Settings
                 return max(1, min(365, $int_value));
             }
             return max(0, min(50, $int_value));
-        } elseif ($key === 'show_open_button') {
+        } elseif ($key === 'show_open_button' || $key === 'use_zaraz') {
             return (bool)$value;
+        } elseif ($key === 'default_language') {
+            return in_array($value, ['hu', 'en', 'fr']) ? $value : 'hu';
+        } elseif ($key === 'zaraz_purpose_name') {
+            return sanitize_key($value);
         } elseif ($key === 'popup_position') {
             return in_array($value, ['center', 'bottom-left', 'bottom-right']) ? $value : 'center';
         } elseif ($key === 'privacy_link_url') {
@@ -227,6 +232,7 @@ class CMV2_Settings
         }
 
         $saved['show_open_button'] = isset($_POST['cmv2_show_open_button']) ? true : false;
+        $saved['use_zaraz'] = isset($_POST['cmv2_use_zaraz']) ? true : false;
 
         update_option(CMV2_OPTION_KEY, $saved);
         return 'success';
@@ -360,9 +366,21 @@ class CMV2_Settings
      */
     private static function render_texts_tab($options)
     {
+        $translations = cmv2_get_translations();
         ?>
         <div id="tab-texts" class="cmv2-tab-content active">
             <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="cmv2_default_language">Nyelv</label></th>
+                    <td>
+                        <select id="cmv2_default_language" name="cmv2_default_language" class="regular-text">
+                            <option value="hu" <?php selected($options['default_language'], 'hu'); ?>>🇭🇺 Magyar</option>
+                            <option value="en" <?php selected($options['default_language'], 'en'); ?>>🇬🇧 English</option>
+                            <option value="fr" <?php selected($options['default_language'], 'fr'); ?>>🇫🇷 Français</option>
+                        </select>
+                        <p class="description">Válaszd ki a banner nyelvét. A kiválasztott nyelvhez tartozó szövegek automatikusan betöltődnek.</p>
+                    </td>
+                </tr>
                 <tr>
                     <th scope="row"><label for="cmv2_title">Banner címsor</label></th>
                     <td><input type="text" id="cmv2_title" name="cmv2_title" value="<?php echo esc_attr($options['title']); ?>" class="regular-text" /></td>
@@ -563,11 +581,34 @@ class CMV2_Settings
                 </tr>
             </table>
 
-            <h3>Google Consent Mode V2 Státusz</h3>
+            <h3>Cloudflare Zaraz Integráció</h3>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="cmv2_use_zaraz">Zaraz használata</label></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="cmv2_use_zaraz" name="cmv2_use_zaraz" value="1" <?php checked($options['use_zaraz'], true); ?> />
+                            Zaraz consent kezelés engedélyezése (Cloudflare)
+                        </label>
+                        <p class="description">Ha Cloudflare Zaraz-t használsz (FB Pixel, stb.), kapcsold be ezt az opciót.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="cmv2_zaraz_purpose_name">Zaraz Purpose neve</label></th>
+                    <td>
+                        <input type="text" id="cmv2_zaraz_purpose_name" name="cmv2_zaraz_purpose_name" value="<?php echo esc_attr($options['zaraz_purpose_name']); ?>" class="regular-text" placeholder="marketing" />
+                        <p class="description">A Zaraz Purpose ID neve (általában "marketing" vagy "advertising"). Ezt a Zaraz felületén állítod be.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <h3>Consent Mode Státusz</h3>
             <div class="cmv2-status-box">
-                <p><strong>Default consent</strong> beállítva (minden denied)</p>
-                <p><strong>Update consent</strong> beállítva (felhasználói választás alapján)</p>
+                <p><strong>Google Consent Mode V2:</strong> ✅ Aktív</p>
+                <p><strong>Default consent:</strong> Beállítva (minden denied)</p>
+                <p><strong>Update consent:</strong> Beállítva (felhasználói választás alapján)</p>
                 <p><strong>GTM események:</strong> cm_default, cm_update</p>
+                <p><strong>Cloudflare Zaraz:</strong> <?php echo $options['use_zaraz'] ? '✅ Engedélyezve (' . esc_html($options['zaraz_purpose_name']) . ')' : '❌ Letiltva'; ?></p>
                 <p><strong>Megfelelőség:</strong> GDPR, Google Consent Mode V2</p>
                 <p><strong>Verzió:</strong> <?php echo CMV2_VERSION; ?> (<?php echo CMV2_CONSENT_VERSION; ?>)</p>
             </div>

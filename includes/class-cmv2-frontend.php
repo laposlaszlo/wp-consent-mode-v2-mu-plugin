@@ -108,10 +108,8 @@ class CMV2_Frontend
             'version' => CMV2_CONSENT_VERSION,
             'ttl_days' => intval($opts['ttl_days']),
             'popup_position' => $opts['popup_position'],
-            'translations' => cmv2_get_translations(),
-            'default_language' => $opts['default_language'],
-            'available_languages' => $opts['available_languages'],
-            'show_language_selector' => $opts['show_language_selector']
+            'use_zaraz' => (bool)$opts['use_zaraz'],
+            'zaraz_purpose_name' => $opts['zaraz_purpose_name']
         ]);
     }
 
@@ -172,19 +170,9 @@ class CMV2_Frontend
         <div id="cmv2-modal" class="cmv2-hidden<?php echo esc_attr($position_class); ?>" aria-hidden="true" role="dialog" aria-labelledby="cmv2-title" aria-modal="true">
             <div class="cmv2-backdrop"></div>
             <div class="cmv2-window" role="document">
-                <?php if ($opts['show_language_selector']): ?>
-                    <div class="cmv2-language-selector">
-                        <?php foreach ($opts['available_languages'] as $lang): ?>
-                            <button class="cmv2-lang-btn" data-lang="<?php echo esc_attr($lang); ?>" aria-label="<?php echo esc_attr(strtoupper($lang)); ?>">
-                                <?php echo esc_html(strtoupper($lang)); ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-                
-                <h2 id="cmv2-title" data-i18n="title"><?php echo esc_html($opts['title']); ?></h2>
-                <p data-i18n="description"><?php echo esc_html($opts['description']); ?></p>
-                <p><a href="<?php echo esc_url($opts['privacy_link_url']); ?>" target="_blank" rel="noopener" data-i18n="privacy_link_text"><?php echo esc_html($opts['privacy_link_text']); ?></a></p>
+                <h2 id="cmv2-title"><?php echo esc_html($opts['title']); ?></h2>
+                <p><?php echo esc_html($opts['description']); ?></p>
+                <p><a href="<?php echo esc_url($opts['privacy_link_url']); ?>" target="_blank" rel="noopener"><?php echo esc_html($opts['privacy_link_text']); ?></a></p>
 
                 <!-- Egyszerű nézet (alapértelmezett) -->
                 <div id="cmv2-simple-view" class="cmv2-view">
