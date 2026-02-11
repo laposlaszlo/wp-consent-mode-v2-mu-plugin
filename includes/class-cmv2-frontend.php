@@ -106,7 +106,8 @@ class CMV2_Frontend
         // Konfigurációs adatok átadása JavaScriptnek
         wp_localize_script('cmv2-banner-js', 'CMV2_CONFIG', [
             'version' => CMV2_CONSENT_VERSION,
-            'ttl_days' => intval($opts['ttl_days'])
+            'ttl_days' => intval($opts['ttl_days']),
+            'popup_position' => $opts['popup_position']
         ]);
     }
 
@@ -115,7 +116,17 @@ class CMV2_Frontend
      */
     private static function generate_custom_css($opts)
     {
+        $position = $opts['popup_position'];
+        $position_class = '';
+        
+        if ($position === 'bottom-left') {
+            $position_class = '#cmv2-modal .cmv2-window { margin: auto auto 20px 20px; max-width: 480px; }';
+        } elseif ($position === 'bottom-right') {
+            $position_class = '#cmv2-modal .cmv2-window { margin: auto 20px 20px auto; max-width: 480px; }';
+        }
+        
         $css = "
+        {$position_class}
         #cmv2-modal .cmv2-backdrop { background: {$opts['backdrop_color']}; }
         #cmv2-modal .cmv2-window {
             background: {$opts['background_color']};

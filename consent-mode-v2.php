@@ -59,6 +59,7 @@ function cmv2_get_default_options()
         'ttl_days' => 180,
         'border_radius' => 12,
         'show_open_button' => true,
+        'popup_position' => 'center', // center, bottom-left, bottom-right
     ];
 }
 

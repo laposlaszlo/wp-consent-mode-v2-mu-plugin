@@ -185,6 +185,8 @@ class CMV2_Settings
             return max(0, min(50, $int_value));
         } elseif ($key === 'show_open_button') {
             return (bool)$value;
+        } elseif ($key === 'popup_position') {
+            return in_array($value, ['center', 'bottom-left', 'bottom-right']) ? $value : 'center';
         } elseif ($key === 'privacy_link_url') {
             return esc_url_raw($value);
         } elseif (strpos($key, 'color') !== false) {
@@ -546,6 +548,17 @@ class CMV2_Settings
                             <input type="checkbox" id="cmv2_show_open_button" name="cmv2_show_open_button" value="1" <?php checked($options['show_open_button'], true); ?> />
                             Bal alsó sarokban rögzített gomb megjelenítése
                         </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="cmv2_popup_position">Popup pozíció</label></th>
+                    <td>
+                        <select id="cmv2_popup_position" name="cmv2_popup_position">
+                            <option value="center" <?php selected($options['popup_position'], 'center'); ?>>Középen</option>
+                            <option value="bottom-left" <?php selected($options['popup_position'], 'bottom-left'); ?>>Lent balra</option>
+                            <option value="bottom-right" <?php selected($options['popup_position'], 'bottom-right'); ?>>Lent jobbra</option>
+                        </select>
+                        <p class="description">Válaszd ki, hol jelenjen meg a cookie banner</p>
                     </td>
                 </tr>
             </table>

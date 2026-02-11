@@ -47,6 +47,19 @@
     animation: cmv2-slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Position variants - will be overridden by inline styles if needed */
+#cmv2-modal.cmv2-position-bottom-left .cmv2-window {
+    margin: auto auto 20px 20px;
+    max-width: 480px;
+    animation: cmv2-slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#cmv2-modal.cmv2-position-bottom-right .cmv2-window {
+    margin: auto 20px 20px auto;
+    max-width: 480px;
+    animation: cmv2-slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Animations */
 @keyframes cmv2-fadeIn {
     from {
@@ -74,6 +87,28 @@
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes cmv2-slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes cmv2-slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
     }
 }
 
@@ -235,6 +270,13 @@
     #cmv2-modal .cmv2-window { 
         margin: 4vh var(--cmv2-spacing-base); 
         padding: 20px; 
+    }
+    
+    /* Override position for mobile - always centered */
+    #cmv2-modal.cmv2-position-bottom-left .cmv2-window,
+    #cmv2-modal.cmv2-position-bottom-right .cmv2-window {
+        margin: 4vh var(--cmv2-spacing-base);
+        max-width: 100%;
     }
     
     .cmv2-actions { 
