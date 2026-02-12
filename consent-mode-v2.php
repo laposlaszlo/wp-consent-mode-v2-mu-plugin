@@ -6,7 +6,7 @@
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.6.7
+ * Version: 2.6.8
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.6.7');
+define('CMV2_VERSION', '2.6.8');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));
@@ -158,16 +158,24 @@ add_action('plugins_loaded', 'cmv2_init_update_checker');
  */
 function cmv2_init_update_checker()
 {
-    // Check if Composer autoload exists
-    $autoload_file = CMV2_PLUGIN_DIR . '/vendor/autoload.php';
-    if (!file_exists($autoload_file)) {
-        return; // Composer dependencies not installed
+    // Prefer the plugin-update-checker loader to avoid Composer autoload conflicts.
+    $puc_loader = CMV2_PLUGIN_DIR . '/vendor/yahnis-elsts/plugin-update-checker/load-v5p6.php';
+    if (file_exists($puc_loader)) {
+        require_once $puc_loader;
+    } else {
+        // Fallback to Composer autoload if the loader is missing.
+        $autoload_file = CMV2_PLUGIN_DIR . '/vendor/autoload.php';
+        if (!file_exists($autoload_file)) {
+            return; // Dependencies not installed
+        }
+        require_once $autoload_file;
     }
 
-    require_once $autoload_file;
-
     // Check if Plugin Update Checker class exists
-    if (!class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
+    if (
+        !class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory') &&
+        !class_exists('YahnisElsts\PluginUpdateChecker\v5p6\PucFactory')
+    ) {
         return;
     }
 
