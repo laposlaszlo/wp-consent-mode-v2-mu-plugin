@@ -178,13 +178,16 @@ class CMV2_Settings
      */
     public static function sanitize_option($key, $value)
     {
-        if ($key === 'ttl_days' || $key === 'border_radius') {
+        if ($key === 'ttl_days' || $key === 'border_radius' || $key === 'wait_for_update_ms') {
             $int_value = intval($value);
             if ($key === 'ttl_days') {
                 return max(1, min(365, $int_value));
             }
+            if ($key === 'wait_for_update_ms') {
+                return max(100, min(2000, $int_value));
+            }
             return max(0, min(50, $int_value));
-        } elseif ($key === 'show_open_button' || $key === 'use_zaraz') {
+        } elseif ($key === 'show_open_button' || $key === 'use_zaraz' || $key === 'eea_only_banner' || $key === 'use_google_ads') {
             return (bool)$value;
         } elseif ($key === 'default_language') {
             return in_array($value, ['hu', 'en', 'fr']) ? $value : 'hu';
@@ -209,6 +212,10 @@ class CMV2_Settings
                 return $value;
             }
             return '';
+        } elseif ($key === 'custom_regions') {
+            // Only allow uppercase letters, commas, spaces and newlines (country codes)
+            $cleaned = preg_replace('/[^A-Za-z,\s]/', '', sanitize_textarea_field($value));
+            return strtoupper(trim($cleaned));
         } elseif ($key === 'description') {
             return sanitize_textarea_field($value);
         } else {
@@ -254,6 +261,8 @@ class CMV2_Settings
 
         $saved['show_open_button'] = isset($_POST['cmv2_show_open_button']) ? true : false;
         $saved['use_zaraz'] = isset($_POST['cmv2_use_zaraz']) ? true : false;
+        $saved['eea_only_banner'] = isset($_POST['cmv2_eea_only_banner']) ? true : false;
+        $saved['use_google_ads'] = isset($_POST['cmv2_use_google_ads']) ? true : false;
 
         update_option(CMV2_OPTION_KEY, $saved);
         return $gtm_invalid ? 'success_with_gtm_warning' : 'success';
@@ -605,6 +614,33 @@ class CMV2_Settings
                 </tr>
             </table>
 
+            <h3>Region-alapú Viselkedés</h3>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="cmv2_eea_only_banner">Banner csak EEA látogatóknak</label></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="cmv2_eea_only_banner" name="cmv2_eea_only_banner" value="1" <?php checked($options['eea_only_banner'], true); ?> />
+                            Banner és consent JS csak EEA/GDPR országokból érkező látogatóknak
+                        </label>
+                        <p class="description">
+                            <strong>⚠️ Feltétel:</strong> Cloudflare (<code>CF-IPCountry</code> header) vagy más proxy (<code>X-Country-Code</code>) szükséges az országdetekcióhoz.<br>
+                            Ha az ország nem azonosítható, a banner mindig megjelenik (biztonságos fallback).
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="cmv2_custom_regions">Egyedi régió lista</label></th>
+                    <td>
+                        <textarea id="cmv2_custom_regions" name="cmv2_custom_regions" rows="3" class="large-text" placeholder="AT, BE, DE, HU, ..."><?php echo esc_textarea($options['custom_regions']); ?></textarea>
+                        <p class="description">
+                            Vesszővel vagy sortöréssel elválasztott 2 betűs ISO-3166-1 országkódok (pl. <code>AT, BE, DE, HU</code>).<br>
+                            <strong>Hagyd üresen</strong> az alapértelmezett EEA/GDPR lista használatához (AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, GB, IS, LI, NO, CH).
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
             <h3>Cloudflare Zaraz Integráció</h3>
             <table class="form-table">
                 <tr>
@@ -639,6 +675,31 @@ class CMV2_Settings
                     <td>
                         <input type="text" id="cmv2_gtm_container_id" name="cmv2_gtm_container_id" value="<?php echo esc_attr($options['gtm_container_id']); ?>" class="regular-text" placeholder="GTM-XXXXXXX" />
                         <p class="description">Ha megadod, a GTM konténer automatikusan betöltődik a default consent után.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <h3>Google Ads Conversion Modeling</h3>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="cmv2_use_google_ads">Google Ads aktív</label></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="cmv2_use_google_ads" name="cmv2_use_google_ads" value="1" <?php checked($options['use_google_ads'], true); ?> />
+                            <code>url_passthrough</code> engedélyezése (Google Ads gclid/gbraid URL-követés)
+                        </label>
+                        <p class="description">
+                            Csak akkor kapcsold be, ha Google Ads konverziókövetést használsz.<br>
+                            <code>ads_data_redaction</code> mindig aktív — denied állapotban is küld modellezhető jeleket a Google-nek.<br>
+                            <strong>GTM Conversion Linker tag:</strong> Ajánlott hozzáadni a GTM-ben, hogy a <code>gclid</code> előző kattintásból átvitődjön (All Pages trigger + Conversion Linker tag).
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="cmv2_wait_for_update_ms">wait_for_update (ms)</label></th>
+                    <td>
+                        <input type="number" id="cmv2_wait_for_update_ms" name="cmv2_wait_for_update_ms" value="<?php echo esc_attr($options['wait_for_update_ms']); ?>" min="100" max="2000" />
+                        <p class="description">Mennyi ideig várjon a GTM a consent frissítésére új látogatóknál (alapértelmezett: 500ms). Visszatérő látogatóknál mindig 0 (azonnali).</p>
                     </td>
                 </tr>
             </table>

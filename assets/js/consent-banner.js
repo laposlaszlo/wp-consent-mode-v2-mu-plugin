@@ -146,6 +146,7 @@
           chkAnalytics: document.getElementById('cmv2-analytics'),
           chkAds: document.getElementById('cmv2-ads'),
           btnAcceptAllSimple: document.getElementById('cmv2-accept-all-simple'),
+          btnRejectAll: document.getElementById('cmv2-reject-all'),
           btnAcceptAllDetailed: document.getElementById('cmv2-accept-all-detailed'),
           btnCustomize: document.getElementById('cmv2-customize'),
           btnSave: document.getElementById('cmv2-save'),
@@ -202,6 +203,11 @@
       acceptAll: function() {
         if (this.elements.chkAnalytics) this.elements.chkAnalytics.checked = true;
         if (this.elements.chkAds) this.elements.chkAds.checked = true;
+      },
+
+      rejectAll: function() {
+        if (this.elements.chkAnalytics) this.elements.chkAnalytics.checked = false;
+        if (this.elements.chkAds) this.elements.chkAds.checked = false;
       }
     };
 
@@ -279,6 +285,14 @@
         
         if (el.btnAcceptAllSimple) {
           el.btnAcceptAllSimple.addEventListener('click', acceptAllHandler);
+        }
+
+        // Reject all button
+        if (el.btnRejectAll) {
+          el.btnRejectAll.addEventListener('click', function() {
+            UIController.rejectAll();
+            self.saveAndApply();
+          });
         }
         
         if (el.btnAcceptAllDetailed) {

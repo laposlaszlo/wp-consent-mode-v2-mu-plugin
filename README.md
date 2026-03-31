@@ -66,6 +66,15 @@ consent-mode-v2-mu-plugin/
 
 ## 📋 Changelog
 
+### [2.7.0] - 2026-03-31
+
+**Added:**
+- **Reject All button** in Simple View — one-click denial is now equally visible to Accept All (CNIL/APD compliance)
+- **EEA-only banner** (`eea_only_banner` option): banner and consent JS are skipped for non-EEA visitors when a country header is available (Cloudflare `CF-IPCountry` / `X-Country-Code`); unknown country always shows banner as safe fallback
+- **Custom region list** (`custom_regions` option): configurable comma/newline-separated ISO-3166-1 country code list for GCM `region` parameter, replacing the hard-coded EEA array
+- **Google Ads modeling** (`use_google_ads` option): `url_passthrough` is now opt-in only; `ads_data_redaction` remains always-on
+- **Configurable `wait_for_update`** (`wait_for_update_ms` option, 100–2000 ms): controls how long GTM waits for consent update from new visitors (default: 500 ms; returning visitors always use 0)
+
 ### [2.6.9] - 2026-03-31
 
 **Fixed:**

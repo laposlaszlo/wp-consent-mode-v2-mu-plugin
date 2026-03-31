@@ -29,6 +29,62 @@ class CMV2_Frontend
     }
     
     /**
+     * Determine whether the consent banner (and its assets) should be shown
+     * to the current visitor. If eea_only_banner is enabled we check the
+     * country header set by Cloudflare (HTTP_CF_IPCOUNTRY) or a generic
+     * proxy (HTTP_X_COUNTRY_CODE). Unknown country → show banner (safe fallback).
+     */
+    private static function is_banner_needed($opts)
+    {
+        if (empty($opts['eea_only_banner'])) {
+            return true;
+        }
+
+        $eea = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU',
+                'IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES',
+                'SE','GB','IS','LI','NO','CH'];
+
+        $country = '';
+        if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
+            $country = strtoupper(sanitize_text_field(wp_unslash($_SERVER['HTTP_CF_IPCOUNTRY'])));
+        } elseif (!empty($_SERVER['HTTP_X_COUNTRY_CODE'])) {
+            $country = strtoupper(sanitize_text_field(wp_unslash($_SERVER['HTTP_X_COUNTRY_CODE'])));
+        }
+
+        // Empty or 'XX' (Cloudflare anonymous) → safe fallback: show banner
+        if ($country === '' || $country === 'XX') {
+            return true;
+        }
+
+        return in_array($country, $eea, true);
+    }
+
+    /**
+     * Build the GCM region array from opts.
+     * Uses custom_regions if set, otherwise the default EEA/GDPR list.
+     */
+    private static function get_regions($opts)
+    {
+        $raw = isset($opts['custom_regions']) ? trim($opts['custom_regions']) : '';
+        if (!empty($raw)) {
+            $parts = preg_split('/[\s,]+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
+            $regions = [];
+            foreach ($parts as $part) {
+                $code = strtoupper(trim($part));
+                if (preg_match('/^[A-Z]{2}$/', $code)) {
+                    $regions[] = $code;
+                }
+            }
+            if (!empty($regions)) {
+                return array_values(array_unique($regions));
+            }
+        }
+        return ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU',
+                'IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES',
+                'SE','GB','IS','LI','NO','CH'];
+    }
+
+    /**
      * Render default consent in head
      */
     public static function render_default_consent()
@@ -39,9 +95,12 @@ class CMV2_Frontend
         $ads_status = $consent['ads'];
         $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
         // Ha van érvényes korábbi hozzájárulás, azonnal frissítjük (wait_for_update=0),
-        // különben adunk 500ms-t a banner JS-nek, hogy megkapja a felhasználó döntését.
+        // különben várunk a banner JS döntésére (konfigurálható ms).
         $has_prior_consent = ($analytics_status !== 'denied' || $ads_status !== 'denied');
-        $wait_for_update = $has_prior_consent ? 0 : 500;
+        $wait_for_update_ms = max(100, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 500));
+        $wait_for_update = $has_prior_consent ? 0 : $wait_for_update_ms;
+        $use_google_ads = !empty($opts['use_google_ads']);
+        $regions_json = wp_json_encode(self::get_regions($opts));
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -58,7 +117,11 @@ class CMV2_Frontend
             // - region: EU/EEA list (GDPR-only default)
             // - url_passthrough és ads_data_redaction ajánlott beállítások
             try {
+                <?php if ($use_google_ads): ?>
+                // url_passthrough: csak akkor, ha Google Ads aktív (gclid/gbraid URL-paraméteres követés)
                 gtag('set', 'url_passthrough', true);
+                <?php endif; ?>
+                // ads_data_redaction: mindig ajánlott – denied esetén is küld modellezhető jelet
                 gtag('set', 'ads_data_redaction', true);
 
                 gtag('consent', 'default', {
@@ -69,7 +132,7 @@ class CMV2_Frontend
                     'functionality_storage': 'granted',
                     'necessary_storage': 'granted',
                     'wait_for_update': <?php echo intval($wait_for_update); ?>,
-                    'region': ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB', 'IS', 'LI', 'NO', 'CH']
+                    'region': <?php echo $regions_json; ?>
                 });
 
                 <?php if ($has_prior_consent): ?>
@@ -180,6 +243,13 @@ class CMV2_Frontend
      */
     public static function enqueue_assets()
     {
+        $opts = cmv2_get_options();
+
+        // EEA-only: ne töltse be a bannert nem-EEA látogatóknak
+        if (!self::is_banner_needed($opts)) {
+            return;
+        }
+
         // CSS betöltése
         wp_enqueue_style(
             'cmv2-banner-css',
@@ -189,7 +259,6 @@ class CMV2_Frontend
         );
 
         // Dinamikus inline CSS a testreszabott színekhez
-        $opts = cmv2_get_options();
         $custom_css = self::generate_custom_css($opts);
         wp_add_inline_style('cmv2-banner-css', $custom_css);
 
@@ -257,7 +326,12 @@ class CMV2_Frontend
     public static function render_banner()
     {
         $opts = cmv2_get_options();
-        
+
+        // EEA-only: ne rendereld a bannert nem-EEA látogatóknak
+        if (!self::is_banner_needed($opts)) {
+            return;
+        }
+
         // Determine position class
         $position_class = '';
         if ($opts['popup_position'] === 'bottom-left') {
@@ -277,6 +351,7 @@ class CMV2_Frontend
                 <div id="cmv2-simple-view" class="cmv2-view">
                     <div class="cmv2-actions">
                         <button id="cmv2-accept-all-simple" class="cmv2-btn cmv2-primary cmv2-btn-large"><?php echo esc_html($opts['accept_all_text']); ?></button>
+                        <button id="cmv2-reject-all" class="cmv2-btn cmv2-secondary cmv2-btn-large"><?php echo esc_html($opts['reject_all_text']); ?></button>
                         <button id="cmv2-customize" class="cmv2-btn cmv2-secondary cmv2-btn-large"><?php echo esc_html($opts['customize_text']); ?></button>
                     </div>
                 </div>

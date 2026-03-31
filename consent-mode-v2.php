@@ -6,7 +6,7 @@
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.6.9
+ * Version: 2.7.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.6.9');
+define('CMV2_VERSION', '2.7.0');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));
@@ -122,6 +122,14 @@ function cmv2_get_default_options()
         'border_radius' => 12,
         'show_open_button' => true,
         'popup_position' => 'center', // center, bottom-left, bottom-right
+
+        // Region-alapú viselkedés (Phase 2)
+        'eea_only_banner' => false,   // Ha true: csak EEA látogatóknak jelenik meg a banner
+        'custom_regions' => '',       // Vesszővel/sortöréssel elválasztott 2 betűs országkódok; üres = EEA alapértelmezett
+
+        // Google Ads Conversion Modeling (Phase 3)
+        'use_google_ads' => false,    // Ha true: url_passthrough=true engedélyezve
+        'wait_for_update_ms' => 500,  // GTM wait_for_update értéke új látogatóknak (ms)
     ];
 }
 
