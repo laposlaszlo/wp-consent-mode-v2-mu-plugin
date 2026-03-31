@@ -130,6 +130,19 @@
           cmv2_ads: ads,
           cmv2_zaraz: USE_ZARAZ
         });
+      },
+
+      // Manuális page_view + session_start jelek első consent után.
+      // Szükséges, mert a GTM már betöltött denied állapotban (wait_for_update lejárt),
+      // így az automatikus GA4 page_view elmaradt. A visszatérő látogatóknál ezt
+      // a PHP már elintézte a <head>-ben lévő consent update-tel.
+      sendPageView: function() {
+        window.dataLayer.push({
+          event: 'page_view',
+          page_location: window.location.href,
+          page_title: document.title
+        });
+        window.dataLayer.push({ event: 'session_start' });
       }
     };
 
@@ -250,6 +263,8 @@
       },
       
       saveAndApply: function() {
+        // Első consent-döntés detektálása: ha még nincs érvényes süti, új látogatóról van szó
+        const isFirstConsent = !StorageManager.isValid(StorageManager.read());
         const choices = UIController.getChoices();
         const state = {
           version: VERSION,
@@ -259,6 +274,11 @@
         
         if (StorageManager.write(state)) {
           ConsentManager.update(choices);
+          // Ha ez az első döntés és az analytics engedélyezve van: küld page_view + session_start.
+          // (A GTM már betöltött denied állapotban, az automatikus GA4 page_view elmaradt.)
+          if (isFirstConsent && choices.analytics) {
+            ConsentManager.sendPageView();
+          }
           UIController.hideModal();
         } else {
           console.error('CMV2: Failed to save consent');

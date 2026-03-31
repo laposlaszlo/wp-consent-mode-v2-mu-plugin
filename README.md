@@ -66,6 +66,12 @@ consent-mode-v2-mu-plugin/
 
 ## 📋 Changelog
 
+### [2.7.1] - 2026-03-31
+
+**Fixed:**
+- After first-time consent grant with analytics enabled, manually push `page_view` and `session_start` to the dataLayer so GTM/GA4 can register the session (GTM has already loaded in `denied` state by the time the user clicks Accept; the automatic GA4 page_view was therefore missed)
+- Returning visitors are unaffected: PHP already emits the consent `update` in `<head>` before GTM loads, so GA4 fires automatically
+
 ### [2.7.0] - 2026-03-31
 
 **Added:**
