@@ -230,8 +230,11 @@
         const state = StorageManager.read();
         
         if (state && StorageManager.isValid(state)) {
-          // Valid consent exists - apply but don't show modal
+          // Valid consent exists - restore consent signal and hide modal.
+          // ConsentManager.update() is called so GTM receives a cm_update dataLayer
+          // event on every page load, even if PHP already emitted the gtag update.
           UIController.setChoices(state.choices);
+          ConsentManager.update(state.choices);
           UIController.hideModal();
         } else {
           // No valid consent - show banner

@@ -38,7 +38,10 @@ class CMV2_Frontend
         $analytics_status = $consent['analytics'];
         $ads_status = $consent['ads'];
         $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
-        $wait_for_update = ($analytics_status === 'granted' && $ads_status === 'granted') ? 0 : 500;
+        // Ha van érvényes korábbi hozzájárulás, azonnal frissítjük (wait_for_update=0),
+        // különben adunk 500ms-t a banner JS-nek, hogy megkapja a felhasználó döntését.
+        $has_prior_consent = ($analytics_status !== 'denied' || $ads_status !== 'denied');
+        $wait_for_update = $has_prior_consent ? 0 : 500;
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -49,9 +52,9 @@ class CMV2_Frontend
             }
 
             // Consent Mode v2 – DEFAULT:
-            // - Szükséges és funkcionális engedélyezve alapértelmezettként
-            // - Analytics/Ads a cookie-ban tárolt állapot alapján (ha van), különben denied
-            // - wait_for_update: 0 vagy 500 (GTM vár a frissítésre, ha nincs explicit consent)
+            // - A default MINDIG 'denied' – ez az új látogatók biztonságos alapállapota.
+            // - Ha van érvényes cookie, azonnal következik egy 'update' a tárolt értékekkel.
+            // - wait_for_update: 0 visszatérő, 500 új látogatóknak
             // - region: EU/EEA list (GDPR-only default)
             // - url_passthrough és ads_data_redaction ajánlott beállítások
             try {
@@ -59,25 +62,36 @@ class CMV2_Frontend
                 gtag('set', 'ads_data_redaction', true);
 
                 gtag('consent', 'default', {
-                    'ad_storage': '<?php echo esc_js($ads_status); ?>',
-                    'analytics_storage': '<?php echo esc_js($analytics_status); ?>',
-                    'ad_user_data': '<?php echo esc_js($ads_status); ?>',
-                    'ad_personalization': '<?php echo esc_js($ads_status); ?>',
+                    'ad_storage': 'denied',
+                    'analytics_storage': 'denied',
+                    'ad_user_data': 'denied',
+                    'ad_personalization': 'denied',
                     'functionality_storage': 'granted',
                     'necessary_storage': 'granted',
                     'wait_for_update': <?php echo intval($wait_for_update); ?>,
                     'region': ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB', 'IS', 'LI', 'NO', 'CH']
                 });
 
+                <?php if ($has_prior_consent): ?>
+                // Visszatérő látogató: GTM-et frissítjük a tárolt hozzájárulással
+                // még mielőtt a GTM betöltene, hogy azonnal tüzeljenek a tagek.
+                gtag('consent', 'update', {
+                    'ad_storage': '<?php echo esc_js($ads_status); ?>',
+                    'analytics_storage': '<?php echo esc_js($analytics_status); ?>',
+                    'ad_user_data': '<?php echo esc_js($ads_status); ?>',
+                    'ad_personalization': '<?php echo esc_js($ads_status); ?>'
+                });
+                <?php endif; ?>
+
                 // Jelzés a GTM felé (debughoz / integrációhoz hasznos)
                 window.dataLayer.push({
                     'event': 'cm_default',
                     'cmv2_version': '<?php echo CMV2_CONSENT_VERSION; ?>',
                     'consent_default': {
-                        ad_storage: '<?php echo esc_js($ads_status); ?>',
-                        analytics_storage: '<?php echo esc_js($analytics_status); ?>',
-                        ad_user_data: '<?php echo esc_js($ads_status); ?>',
-                        ad_personalization: '<?php echo esc_js($ads_status); ?>',
+                        ad_storage: 'denied',
+                        analytics_storage: 'denied',
+                        ad_user_data: 'denied',
+                        ad_personalization: 'denied',
                         functionality_storage: 'granted',
                         necessary_storage: 'granted'
                     }
