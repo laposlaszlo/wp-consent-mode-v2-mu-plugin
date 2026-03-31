@@ -66,6 +66,13 @@ consent-mode-v2-mu-plugin/
 
 ## 📋 Changelog
 
+### [2.6.9] - 2026-03-31
+
+**Fixed:**
+- Consent Mode default always emits `denied` — this is the correct GCM v2 baseline for new visitors
+- Returning visitors now receive an immediate `gtag('consent', 'update', ...)` in `<head>` before GTM loads, so tags fire correctly on every page reload
+- JS `App.loadState()` now calls `ConsentManager.update()` on every page load for returning visitors, ensuring the `cm_update` dataLayer event is always dispatched
+
 ### [2.4.0] - 2025-02-11
 
 **Added:**
