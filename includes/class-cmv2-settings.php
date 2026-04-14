@@ -184,7 +184,7 @@ class CMV2_Settings
                 return max(1, min(365, $int_value));
             }
             if ($key === 'wait_for_update_ms') {
-                return max(100, min(2000, $int_value));
+                return max(500, min(2000, $int_value));
             }
             return max(0, min(50, $int_value));
         } elseif ($key === 'show_open_button' || $key === 'use_zaraz' || $key === 'eea_only_banner' || $key === 'use_google_ads') {
@@ -716,8 +716,8 @@ class CMV2_Settings
                 <tr>
                     <th scope="row"><label for="cmv2_wait_for_update_ms">wait_for_update (ms)</label></th>
                     <td>
-                        <input type="number" id="cmv2_wait_for_update_ms" name="cmv2_wait_for_update_ms" value="<?php echo esc_attr($options['wait_for_update_ms']); ?>" min="100" max="2000" />
-                        <p class="description">Mennyi ideig várjon a GTM a consent frissítésére új látogatóknál (alapértelmezett: 500ms). Visszatérő látogatóknál mindig 0 (azonnali).</p>
+                        <input type="number" id="cmv2_wait_for_update_ms" name="cmv2_wait_for_update_ms" value="<?php echo esc_attr(max(500, intval($options['wait_for_update_ms']))); ?>" min="500" max="2000" />
+                        <p class="description">Mennyi ideig várjon a GTM a consent frissítésére az indulás előtt. Minimum 500ms, az ajánlott alapérték 1000ms.</p>
                     </td>
                 </tr>
             </table>

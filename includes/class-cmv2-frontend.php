@@ -94,11 +94,10 @@ class CMV2_Frontend
         $analytics_status = $consent['analytics'];
         $ads_status = $consent['ads'];
         $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
-        // Ha van érvényes korábbi hozzájárulás, azonnal frissítjük (wait_for_update=0),
-        // különben várunk a banner JS döntésére (konfigurálható ms).
+        // A wait_for_update mindig kap egy rövid várakozási ablakot, hogy a korai
+        // consent update biztosan a GTM/GA4 indítása előtt fusson le.
         $has_prior_consent = ($analytics_status !== 'denied' || $ads_status !== 'denied');
-        $wait_for_update_ms = max(100, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 500));
-        $wait_for_update = $has_prior_consent ? 0 : $wait_for_update_ms;
+        $wait_for_update = max(500, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 1000));
         $use_google_ads = !empty($opts['use_google_ads']);
         $regions_json = wp_json_encode(self::get_regions($opts));
         ?>
@@ -113,7 +112,7 @@ class CMV2_Frontend
             // Consent Mode v2 – DEFAULT:
             // - A default MINDIG 'denied' – ez az új látogatók biztonságos alapállapota.
             // - Ha van érvényes cookie, azonnal következik egy 'update' a tárolt értékekkel.
-            // - wait_for_update: 0 visszatérő, 500 új látogatóknak
+            // - wait_for_update: mindig legalább 500ms, alapból 1000ms
             // - region: EU/EEA list (GDPR-only default)
             // - url_passthrough és ads_data_redaction ajánlott beállítások
             try {
