@@ -3,7 +3,7 @@
         'name' => 'laposlaszlo/wp-consent-mode-v2',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '77acf7ee80aa5867dd8874787700dca3cd90b1f2',
+        'reference' => 'ce35d5932919aa8ff7cd753f5d5ba859f7f8a4b9',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'laposlaszlo/wp-consent-mode-v2' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '77acf7ee80aa5867dd8874787700dca3cd90b1f2',
+            'reference' => 'ce35d5932919aa8ff7cd753f5d5ba859f7f8a4b9',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

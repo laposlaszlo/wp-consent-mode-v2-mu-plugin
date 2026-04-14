@@ -243,6 +243,10 @@
         
         // Bind event handlers
         this.bindEvents();
+
+        // Detect GTM duplicate loading (runs after DOMContentLoaded so all
+        // synchronous dataLayer pushes from <head> snippets are already there)
+        this.detectGtmDuplicate();
       },
       
       loadState: function() {
@@ -285,6 +289,32 @@
         }
       },
       
+      detectGtmDuplicate: function() {
+        if (!window.dataLayer || !Array.isArray(window.dataLayer)) {
+          return;
+        }
+        var count = 0;
+        for (var i = 0; i < window.dataLayer.length; i++) {
+          if (window.dataLayer[i] && window.dataLayer[i]['event'] === 'gtm.js') {
+            count++;
+          }
+        }
+        if (count > 1) {
+          var gtmId = CONFIG.gtm_container_id || '';
+          console.warn(
+            'CMV2 ⚠️ GTM duplikáció észlelve! ' +
+            (gtmId ? '(' + gtmId + ') ' : '') +
+            'A GTM ' + count + 'x töltődött be. ' +
+            'Ellenőrizd: theme header.php, WooCommerce, egyéb pluginek.'
+          );
+          window.dataLayer.push({
+            event: 'cmv2_gtm_duplicate',
+            cmv2_gtm_load_count: count,
+            cmv2_gtm_container: gtmId
+          });
+        }
+      },
+
       bindEvents: function() {
         const self = this;
         const el = UIController.elements;

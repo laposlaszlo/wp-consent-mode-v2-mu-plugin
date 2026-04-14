@@ -66,6 +66,16 @@ consent-mode-v2-mu-plugin/
 
 ## 📋 Changelog
 
+### [2.8.0] - 2026-04-14
+
+**Fixed:**
+- GTM double-loading (duplicate `gtm.js` in dataLayer) caused by theme or other plugins injecting the same GTM container independently. The plugin's GTM snippet now includes a `_cmv2_gtm_loaded_{ID}` guard flag that prevents re-injection of the same container ID
+- Passed `gtm_container_id` to the frontend JS config (`CMV2_CONFIG`) so the JS layer is aware of the configured container
+
+**Added:**
+- Runtime GTM duplication detector in JS (`App.detectGtmDuplicate`): counts `gtm.js` events in the dataLayer after DOMContentLoaded; if more than one is found, logs a `console.warn` with the container ID and count, and pushes a `cmv2_gtm_duplicate` event to the dataLayer for GTM-side monitoring
+- Admin warning panel in the Advanced tab when a GTM Container ID is configured, listing the most common external sources of GTM duplication (theme `header.php`, MonsterInsights, Site Kit, WooCommerce)
+
 ### [2.7.1] - 2026-03-31
 
 **Fixed:**

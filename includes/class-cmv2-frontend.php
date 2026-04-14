@@ -166,10 +166,15 @@ class CMV2_Frontend
         </script>
         <?php if (!empty($gtm_container_id)): ?>
             <script>
-                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                // GTM de-duplication guard: prevents double injection if theme or another
+                // plugin already loaded this container (or this snippet runs more than once).
+                (function(w,d,s,l,i){
+                    if (w['_cmv2_gtm_loaded_'+i]) { return; }
+                    w['_cmv2_gtm_loaded_'+i] = 1;
+                    w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
                 })(window,document,'script','dataLayer','<?php echo esc_js($gtm_container_id); ?>');
             </script>
         <?php endif; ?>
@@ -277,7 +282,8 @@ class CMV2_Frontend
             'ttl_days' => intval($opts['ttl_days']),
             'popup_position' => $opts['popup_position'],
             'use_zaraz' => (bool)$opts['use_zaraz'],
-            'zaraz_purpose_name' => $opts['zaraz_purpose_name']
+            'zaraz_purpose_name' => $opts['zaraz_purpose_name'],
+            'gtm_container_id' => isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '',
         ]);
     }
 

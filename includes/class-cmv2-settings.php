@@ -677,6 +677,24 @@ class CMV2_Settings
                         <p class="description">Ha megadod, a GTM konténer automatikusan betöltődik a default consent után.</p>
                     </td>
                 </tr>
+                <?php if (!empty($options['gtm_container_id'])): ?>
+                <tr>
+                    <th scope="row">GTM duplikáció figyelmeztetés</th>
+                    <td>
+                        <div class="notice notice-warning inline" style="margin:0; padding: 8px 12px;">
+                            <p style="margin:0;">
+                                <strong>⚠️ Ellenőrizd a GTM duplikációt!</strong><br>
+                                A plugin betölti a GTM konténert (<code><?php echo esc_html($options['gtm_container_id']); ?></code>).<br>
+                                Ha a GTM <strong>kétszer töltődik be</strong>, ellenőrizd:<br>
+                                &bull; Theme <code>header.php</code> – nincs-e benne GTM snippet<br>
+                                &bull; Egyéb plugin (pl. MonsterInsights, Site Kit, WooCommerce) – nem injektál-e GTM-et<br>
+                                &bull; Checkout oldalon nincs-e külön GTM snippet<br>
+                                <em>A plugin beépített <code>_cmv2_gtm_loaded_*</code> guard védi a saját duplikációtól. Ha kettes betöltést látsz, a forrás külső.</em>
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                <?php endif; ?>
             </table>
 
             <h3>Google Ads Conversion Modeling</h3>
