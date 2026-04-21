@@ -21,6 +21,26 @@
     const USE_ZARAZ = CONFIG.use_zaraz || false;
     const ZARAZ_PURPOSE = CONFIG.zaraz_purpose_name || 'marketing';
 
+    // UTM preservation: capture landing params before consent so they can be
+    // restored in the deferred page_view when the user accepts on a later page.
+    const UTM_KEYS        = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_id'];
+    const CMV2_LANDING_KEY = 'cmv2_landing';
+
+    (function captureLandingUtm() {
+      try {
+        if (sessionStorage.getItem(CMV2_LANDING_KEY)) return; // keep first-touch data
+        var urlParams = new URLSearchParams(window.location.search);
+        var utmData   = {};
+        UTM_KEYS.forEach(function (k) {
+          var v = urlParams.get(k);
+          if (v) utmData[k] = v;
+        });
+        if (Object.keys(utmData).length > 0) {
+          sessionStorage.setItem(CMV2_LANDING_KEY, JSON.stringify(utmData));
+        }
+      } catch (e) {}
+    })();
+
     // ======================
     // Storage Manager Module
     // ======================
@@ -137,11 +157,30 @@
       // így az automatikus GA4 page_view elmaradt. A visszatérő látogatóknál ezt
       // a PHP már elintézte a <head>-ben lévő consent update-tel.
       sendPageView: function() {
-        window.dataLayer.push({
+        var pageViewEvent = {
           event: 'page_view',
           page_location: window.location.href,
           page_title: document.title
-        });
+        };
+
+        // Restore UTM params from sessionStorage when the current URL has none.
+        // This preserves traffic-source attribution for users who accepted consent
+        // on a page other than the original landing page.
+        try {
+          var urlParams = new URLSearchParams(window.location.search);
+          var hasUtm    = UTM_KEYS.some(function (k) { return !!urlParams.get(k); });
+          if (!hasUtm) {
+            var raw = sessionStorage.getItem(CMV2_LANDING_KEY);
+            if (raw) {
+              var landing = JSON.parse(raw);
+              UTM_KEYS.forEach(function (k) {
+                if (landing[k]) pageViewEvent[k] = landing[k];
+              });
+            }
+          }
+        } catch (e) {}
+
+        window.dataLayer.push(pageViewEvent);
         window.dataLayer.push({ event: 'session_start' });
       }
     };
