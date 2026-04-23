@@ -121,7 +121,7 @@ class CMV2_Frontend
                 gtag('set', 'url_passthrough', true);
                 <?php endif; ?>
                 // ads_data_redaction: mindig ajánlott – denied esetén is küld modellezhető jelet
-                gtag('set', 'ads_data_redaction', true);
+                gtag('set', 'ads_data_redaction', false);
 
                 gtag('consent', 'default', {
                     'ad_storage': 'denied',
