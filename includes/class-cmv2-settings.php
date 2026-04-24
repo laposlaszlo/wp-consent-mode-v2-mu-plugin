@@ -410,6 +410,7 @@ class CMV2_Settings
                             <option value="hu" <?php selected($options['default_language'], 'hu'); ?>>🇭🇺 Magyar</option>
                             <option value="en" <?php selected($options['default_language'], 'en'); ?>>🇬🇧 English</option>
                             <option value="fr" <?php selected($options['default_language'], 'fr'); ?>>🇫🇷 Français</option>
+                            <option value="no" <?php selected($options['default_language'], 'no'); ?>>🇳🇴 Norsk</option>
                         </select>
                         <p class="description">Válaszd ki a banner nyelvét. A kiválasztott nyelvhez tartozó szövegek automatikusan betöltődnek.</p>
                     </td>

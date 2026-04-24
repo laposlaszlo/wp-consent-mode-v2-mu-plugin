@@ -6,7 +6,7 @@
  * Plugin URI: https://github.com/laposlaszlo/wp-consent-mode-v2-mu-plugin
  * Author: Lapos László
  * Author URI: https://laposlaszlo.com
- * Version: 2.8.4
+ * Version: 2.8.5
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * License: MIT
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CMV2_VERSION', '2.8.4');
+define('CMV2_VERSION', '2.8.5');
 define('CMV2_CONSENT_VERSION', '2025-10-09');
 define('CMV2_PLUGIN_DIR', dirname(__FILE__));
 define('CMV2_PLUGIN_URL', plugins_url('', __FILE__));
@@ -76,6 +76,19 @@ function cmv2_get_translations()
             'save_text' => 'Enregistrer',
             'open_button_text' => 'Paramètres des cookies',
             'customize_text' => 'Personnaliser',
+        ],
+        'no' => [
+            'title' => 'Informasjonskapsler',
+            'description' => 'Dette nettstedet bruker informasjonskapsler og lignende teknologier for funksjonalitet, statistikk og annonsering. Ikke-nødvendige elementer aktiveres kun etter ditt samtykke.',
+            'privacy_link_text' => 'Personvernpolicy',
+            'necessary_label' => 'Nødvendig',
+            'analytics_label' => 'Analyse (GA4)',
+            'ads_label' => 'Annonsering & Markedsføring (Google Ads, Meta)',
+            'accept_all_text' => 'Godta alle',
+            'reject_all_text' => 'Kun nødvendig',
+            'save_text' => 'Lagre',
+            'open_button_text' => 'Informasjonskapsler',
+            'customize_text' => 'Tilpass',
         ],
     ];
 }
