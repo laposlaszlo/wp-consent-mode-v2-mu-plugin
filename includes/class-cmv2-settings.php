@@ -190,7 +190,7 @@ class CMV2_Settings
         } elseif ($key === 'show_open_button' || $key === 'use_zaraz' || $key === 'eea_only_banner' || $key === 'use_google_ads') {
             return (bool)$value;
         } elseif ($key === 'default_language') {
-            return in_array($value, ['hu', 'en', 'fr']) ? $value : 'hu';
+            return in_array($value, ['hu', 'en', 'fr', 'no']) ? $value : 'hu';
         } elseif ($key === 'zaraz_purpose_name') {
             // Ne használjunk sanitize_key()-t, mert az lowercase-re alakítja!
             // A Zaraz Purpose ID case-sensitive, használjunk sanitize_text_field()-et
