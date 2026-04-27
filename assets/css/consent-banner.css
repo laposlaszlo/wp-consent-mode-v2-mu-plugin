@@ -17,6 +17,9 @@
     --cmv2-shadow-hover: 0 6px 20px rgba(0,0,0,0.3);
 }
 
+/* Cloudflare Zaraz beépített consent modal elnyomása – CMV2 kezeli helyette */
+.cf_modal_container { display: none !important; }
+
 /* Modal container */
 #cmv2-modal.cmv2-hidden { 
     display: none; 
