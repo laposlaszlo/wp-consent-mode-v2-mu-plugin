@@ -100,20 +100,7 @@ class CMV2_Frontend
         $wait_for_update = max(500, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 1000));
         $use_google_ads = !empty($opts['use_google_ads']);
         $regions_json = wp_json_encode(self::get_regions($opts));
-        $use_zaraz = !empty($opts['use_zaraz']);
-        $zaraz_purpose = isset($opts['zaraz_purpose_name']) ? $opts['zaraz_purpose_name'] : 'marketing';
-
-        // Zaraz saját popup elnyomása: a zarazConsentChoices-t a Zaraz betöltése ELŐTT kell
-        // beállítani. Ha van érvényes cookie, a tárolt értéket adjuk át; ha nincs, false-t
-        // (ez elnyomja a Zaraz beépített popupját – a saját bannerünk kezeli helyette).
-        if ($use_zaraz && !empty($zaraz_purpose)):
-            $ads_bool = ($ads_status === 'granted') ? 'true' : 'false';
         ?>
-        <script>
-            window.zarazConsentChoices = window.zarazConsentChoices || {};
-            window.zarazConsentChoices[<?php echo wp_json_encode($zaraz_purpose); ?>] = <?php echo $ads_bool; ?>;
-        </script>
-        <?php endif; ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
             window.dataLayer = window.dataLayer || [];

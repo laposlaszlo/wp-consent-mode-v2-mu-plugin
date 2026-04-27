@@ -120,25 +120,12 @@
         if (USE_ZARAZ && window.zaraz && window.zaraz.consent) {
           try {
             const zarazConsent = {};
-            zarazConsent[ZARAZ_PURPOSE] = choices.ads; // Marketing/Ads kapcsolva van?
+            zarazConsent[ZARAZ_PURPOSE] = choices.ads;
             window.zaraz.consent.set(zarazConsent);
-            
-            // Debug log
-            console.log('CMV2: Zaraz consent updated', zarazConsent);
+            // Kiküldi az addig várakoztatott pageview/trigger eseményeket
+            window.zaraz.consent.sendQueuedEvents();
           } catch(e) {
             console.error('CMV2: Zaraz consent error:', e.message || e);
-            console.error('❌ A "' + ZARAZ_PURPOSE + '" Purpose ID nem található a Zaraz-ban!');
-            console.error('� FIGYELEM: Az ID case-sensitive! "kujo" ≠ "kujO" ≠ "KUJO"');
-            console.error('📍 Ellenőrizd: Cloudflare → Zaraz → Settings → Consent Management → Purposes');
-            console.error('💡 MÁSOLD KI a Purpose ID mezőt és illeszd be pontosan úgy a WordPress adminba!');
-            
-            // Próbáljuk meg listázni az elérhető purpose-öket
-            if (window.zaraz.consent.APIReady && window.zaraz.consent.purposes) {
-              const availablePurposes = Object.keys(window.zaraz.consent.purposes);
-              if (availablePurposes.length > 0) {
-                console.log('✅ Elérhető Zaraz Purpose ID-k (pontos kis/nagybetűkkel):', availablePurposes);
-              }
-            }
           }
         }
 
@@ -286,6 +273,29 @@
         // Detect GTM duplicate loading (runs after DOMContentLoaded so all
         // synchronous dataLayer pushes from <head> snippets are already there)
         this.detectGtmDuplicate();
+
+        // Zaraz saját consent modalját elnyomjuk – a mi bannerünk kezeli.
+        // Ha van tárolt döntés, szinkronizáljuk Zaraznak is.
+        if (USE_ZARAZ) {
+          var setupZarazConsent = function() {
+            if (!window.zaraz || !window.zaraz.consent) { return; }
+            // Elnyomja a Zaraz beépített modalját
+            window.zaraz.consent.modal = false;
+            // Ha van érvényes tárolt döntés, szinkronizáljuk Zaraznak
+            var stored = StorageManager.read();
+            if (stored && StorageManager.isValid(stored)) {
+              var prefs = {};
+              prefs[ZARAZ_PURPOSE] = !!stored.choices.ads;
+              window.zaraz.consent.set(prefs);
+              window.zaraz.consent.sendQueuedEvents();
+            }
+          };
+          if (window.zaraz && window.zaraz.consent && window.zaraz.consent.APIReady) {
+            setupZarazConsent();
+          } else {
+            document.addEventListener('zarazConsentAPIReady', setupZarazConsent);
+          }
+        }
       },
       
       loadState: function() {
