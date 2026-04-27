@@ -279,8 +279,6 @@
         if (USE_ZARAZ) {
           var setupZarazConsent = function() {
             if (!window.zaraz || !window.zaraz.consent) { return; }
-            // Elnyomja a Zaraz beépített modalját
-            window.zaraz.consent.modal = false;
             // Ha van érvényes tárolt döntés, szinkronizáljuk Zaraznak
             var stored = StorageManager.read();
             if (stored && StorageManager.isValid(stored)) {
