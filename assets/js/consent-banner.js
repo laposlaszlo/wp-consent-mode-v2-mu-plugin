@@ -324,8 +324,9 @@
         
         if (StorageManager.write(state)) {
           ConsentManager.update(choices);
-          // Ha ez az első döntés és az analytics engedélyezve van: küld page_view + session_start.
-          // (A GTM már betöltött denied állapotban, az automatikus GA4 page_view elmaradt.)
+          // Első consent-döntés után, ha analytics engedélyezve: manuális page_view + session_start.
+          // A GTM betöltésekor wait_for_update=30000ms volt beállítva (új látogató), ezért az
+          // automatikus GA4 page_view még nem futott le – most pótoljuk.
           if (isFirstConsent && choices.analytics) {
             ConsentManager.sendPageView();
           }

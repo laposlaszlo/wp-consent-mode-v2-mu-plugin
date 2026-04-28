@@ -97,7 +97,12 @@ class CMV2_Frontend
         // A wait_for_update mindig kap egy rövid várakozási ablakot, hogy a korai
         // consent update biztosan a GTM/GA4 indítása előtt fusson le.
         $has_prior_consent = ($analytics_status !== 'denied' || $ads_status !== 'denied');
-        $wait_for_update = max(500, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 1000));
+        // Új látogatónál (nincs érvényes cookie) hosszú wait_for_update: a GTM ne tüzelje
+        // a tageket "denied modeling" módban a felhasználó döntése előtt.
+        // Visszatérő látogatónál rövid: a consent update már elment a <head>-ben.
+        $wait_for_update = $has_prior_consent
+            ? max(500, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 1000))
+            : 30000;
         $use_google_ads = !empty($opts['use_google_ads']);
         $regions_json = wp_json_encode(self::get_regions($opts));
         ?>
