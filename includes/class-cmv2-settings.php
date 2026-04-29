@@ -310,6 +310,11 @@ class CMV2_Settings
             return 'invalid_type';
         }
 
+        // Verify the file is a genuine PHP upload (not a path traversal attempt)
+        if (!is_uploaded_file($_FILES['cmv2_import_file']['tmp_name'])) {
+            return 'upload_error';
+        }
+
         $json = file_get_contents($_FILES['cmv2_import_file']['tmp_name']);
         $imported = json_decode($json, true);
 
