@@ -187,7 +187,7 @@ class CMV2_Settings
                 return max(500, min(2000, $int_value));
             }
             return max(0, min(50, $int_value));
-        } elseif ($key === 'show_open_button' || $key === 'use_zaraz' || $key === 'eea_only_banner' || $key === 'use_google_ads') {
+        } elseif ($key === 'show_open_button' || $key === 'show_reject_button' || $key === 'use_zaraz' || $key === 'eea_only_banner' || $key === 'use_google_ads') {
             return (bool)$value;
         } elseif ($key === 'default_language') {
             return in_array($value, ['hu', 'en', 'fr', 'no']) ? $value : 'hu';
@@ -260,6 +260,7 @@ class CMV2_Settings
         }
 
         $saved['show_open_button'] = isset($_POST['cmv2_show_open_button']) ? true : false;
+        $saved['show_reject_button'] = isset($_POST['cmv2_show_reject_button']) ? true : false;
         $saved['use_zaraz'] = isset($_POST['cmv2_use_zaraz']) ? true : false;
         $saved['eea_only_banner'] = isset($_POST['cmv2_eea_only_banner']) ? true : false;
         $saved['use_google_ads'] = isset($_POST['cmv2_use_google_ads']) ? true : false;
@@ -596,6 +597,16 @@ class CMV2_Settings
                     <td>
                         <input type="number" id="cmv2_border_radius" name="cmv2_border_radius" value="<?php echo esc_attr($options['border_radius']); ?>" min="0" max="50" />
                         <p class="description">A modal ablak sarkainak lekerekítése pixelben</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="cmv2_show_reject_button">„Csak szükséges" gomb megjelenítése</label></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="cmv2_show_reject_button" name="cmv2_show_reject_button" value="1" <?php checked($options['show_reject_button'], true); ?> />
+                            „Csak szükséges" gomb megjelenítése a bannerben
+                        </label>
+                        <p class="description">Ha kikapcsolod, a bannerben csak az „Elfogadok mindent" és a „Testreszabás" gombok jelennek meg.</p>
                     </td>
                 </tr>
                 <tr>

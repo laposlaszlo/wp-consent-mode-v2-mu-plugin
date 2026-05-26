@@ -361,7 +361,9 @@ class CMV2_Frontend
                 <div id="cmv2-simple-view" class="cmv2-view">
                     <div class="cmv2-actions">
                         <button id="cmv2-accept-all-simple" class="cmv2-btn cmv2-primary cmv2-btn-large"><?php echo esc_html($opts['accept_all_text']); ?></button>
+                        <?php if (!empty($opts['show_reject_button'])): ?>
                         <button id="cmv2-reject-all" class="cmv2-btn cmv2-secondary cmv2-btn-large"><?php echo esc_html($opts['reject_all_text']); ?></button>
+                        <?php endif; ?>
                         <button id="cmv2-customize" class="cmv2-btn cmv2-secondary cmv2-btn-large"><?php echo esc_html($opts['customize_text']); ?></button>
                     </div>
                 </div>
