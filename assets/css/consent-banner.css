@@ -177,10 +177,15 @@
     font-weight: 500;
 }
 
-.cmv2-row input[type="checkbox"] { 
-    transform: scale(1.4); 
-    cursor: pointer; 
-    width: initial !important;
+.cmv2-row input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+    appearance: auto;
+    -webkit-appearance: auto;
+    margin: 0;
 }
 
 .cmv2-disabled { 
