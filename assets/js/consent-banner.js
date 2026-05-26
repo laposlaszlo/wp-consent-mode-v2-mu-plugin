@@ -220,11 +220,13 @@
       showSimpleView: function() {
         if (this.elements.simpleView) this.elements.simpleView.classList.remove('cmv2-hidden');
         if (this.elements.detailedView) this.elements.detailedView.classList.add('cmv2-hidden');
+        if (this.elements.modal) this.elements.modal.classList.remove('cmv2-detailed-mode');
       },
       
       showDetailedView: function() {
         if (this.elements.simpleView) this.elements.simpleView.classList.add('cmv2-hidden');
         if (this.elements.detailedView) this.elements.detailedView.classList.remove('cmv2-hidden');
+        if (this.elements.modal) this.elements.modal.classList.add('cmv2-detailed-mode');
       },
       
       getChoices: function() {

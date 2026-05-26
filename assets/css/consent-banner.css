@@ -280,6 +280,19 @@
     box-shadow: var(--cmv2-shadow-hover);
 }
 
+/* Detailed view always centered - regardless of banner position setting */
+#cmv2-modal.cmv2-position-bottom-left.cmv2-detailed-mode,
+#cmv2-modal.cmv2-position-bottom-right.cmv2-detailed-mode {
+    align-items: center;
+    justify-content: center;
+}
+
+#cmv2-modal.cmv2-position-bottom-left.cmv2-detailed-mode .cmv2-window,
+#cmv2-modal.cmv2-position-bottom-right.cmv2-detailed-mode .cmv2-window {
+    margin: 0;
+    max-width: 680px;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     #cmv2-modal .cmv2-window { 
