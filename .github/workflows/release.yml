@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify tag matches plugin version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          HEADER=$(grep -m1 -E '^\s*\*\s*Version:' consent-mode-v2.php | sed -E 's/.*Version:\s*//' | tr -d '[:space:]')
+          CONST=$(grep -m1 "define('CMV2_VERSION'" consent-mode-v2.php | sed -E "s/.*'([0-9][^']*)'\).*/\1/")
+          echo "tag=$TAG header=$HEADER const=$CONST"
+          [ "$TAG" = "$HEADER" ] && [ "$TAG" = "$CONST" ] || { echo "::error::Tag, plugin header and CMV2_VERSION must match"; exit 1; }
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install production dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Build zip
+        run: |
+          SLUG=wp-consent-mode-v2-mu-plugin
+          mkdir -p "build/$SLUG"
+          rsync -a ./ "build/$SLUG/" \
+            --exclude='.git' --exclude='.github' --exclude='build' \
+            --exclude='*.md' --exclude='composer.json' --exclude='composer.lock' \
+            --exclude='.gitignore' --exclude='.DS_Store'
+          rm -rf "build/$SLUG/vendor/yahnis-elsts/plugin-update-checker/languages"
+          (cd build && zip -rq "$SLUG.zip" "$SLUG")
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" build/wp-consent-mode-v2-mu-plugin.zip \
+            --title "Version ${GITHUB_REF_NAME#v}" --generate-notes

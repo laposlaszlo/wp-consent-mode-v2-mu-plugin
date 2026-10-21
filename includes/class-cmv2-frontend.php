@@ -34,15 +34,11 @@ class CMV2_Frontend
      * country header set by Cloudflare (HTTP_CF_IPCOUNTRY) or a generic
      * proxy (HTTP_X_COUNTRY_CODE). Unknown country → show banner (safe fallback).
      */
-    private static function is_banner_needed($opts)
+    public static function is_banner_needed($opts)
     {
         if (empty($opts['eea_only_banner'])) {
             return true;
         }
-
-        $eea = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU',
-                'IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES',
-                'SE','GB','IS','LI','NO','CH'];
 
         $country = '';
         if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
@@ -56,55 +52,27 @@ class CMV2_Frontend
             return true;
         }
 
-        return in_array($country, $eea, true);
+        return in_array($country, CMV2_Options::regions($opts), true);
     }
 
     /**
-     * Build the GCM region array from opts.
-     * Uses custom_regions if set, otherwise the default EEA/GDPR list.
-     */
-    private static function get_regions($opts)
-    {
-        $raw = isset($opts['custom_regions']) ? trim($opts['custom_regions']) : '';
-        if (!empty($raw)) {
-            $parts = preg_split('/[\s,]+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
-            $regions = [];
-            foreach ($parts as $part) {
-                $code = strtoupper(trim($part));
-                if (preg_match('/^[A-Z]{2}$/', $code)) {
-                    $regions[] = $code;
-                }
-            }
-            if (!empty($regions)) {
-                return array_values(array_unique($regions));
-            }
-        }
-        return ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU',
-                'IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES',
-                'SE','GB','IS','LI','NO','CH'];
-    }
-
-    /**
-     * Render default consent in head
+     * Render default consent in head.
+     *
+     * The stored consent cookie is evaluated in the browser, not in PHP, so the
+     * markup is identical for every visitor and stays safe behind page caches.
      */
     public static function render_default_consent()
     {
         $opts = cmv2_get_options();
-        $consent = self::get_consent_from_cookie($opts);
-        $analytics_status = $consent['analytics'];
-        $ads_status = $consent['ads'];
         $gtm_container_id = isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '';
-        // A wait_for_update mindig kap egy rövid várakozási ablakot, hogy a korai
-        // consent update biztosan a GTM/GA4 indítása előtt fusson le.
-        $has_prior_consent = ($analytics_status !== 'denied' || $ads_status !== 'denied');
-        // Új látogatónál (nincs érvényes cookie) hosszú wait_for_update: a GTM ne tüzelje
-        // a tageket "denied modeling" módban a felhasználó döntése előtt.
-        // Visszatérő látogatónál rövid: a consent update már elment a <head>-ben.
-        $wait_for_update = $has_prior_consent
-            ? max(500, intval(isset($opts['wait_for_update_ms']) ? $opts['wait_for_update_ms'] : 1000))
-            : 30000;
-        $use_google_ads = !empty($opts['use_google_ads']);
-        $regions_json = wp_json_encode(self::get_regions($opts));
+        $config = [
+            'cookie' => CMV2_LS_KEY,
+            'version' => CMV2_CONSENT_VERSION,
+            'ttl_days' => max(1, intval($opts['ttl_days'])),
+            'wait_for_update' => max(500, intval($opts['wait_for_update_ms'])),
+            'url_passthrough' => !empty($opts['use_google_ads']),
+            'regions' => CMV2_Options::regions($opts),
+        ];
         ?>
         <script>
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
@@ -117,56 +85,72 @@ class CMV2_Frontend
             // Consent Mode v2 – DEFAULT:
             // - A default MINDIG 'denied' – ez az új látogatók biztonságos alapállapota.
             // - Ha van érvényes cookie, azonnal következik egy 'update' a tárolt értékekkel.
-            // - wait_for_update: mindig legalább 500ms, alapból 1000ms
-            // - region: EU/EEA list (GDPR-only default)
-            // - url_passthrough és ads_data_redaction ajánlott beállítások
-            try {
-                <?php if ($use_google_ads): ?>
-                // url_passthrough: csak akkor, ha Google Ads aktív (gclid/gbraid URL-paraméteres követés)
-                gtag('set', 'url_passthrough', true);
-                <?php endif; ?>
-                // ads_data_redaction: mindig ajánlott – denied esetén is küld modellezhető jelet
-                gtag('set', 'ads_data_redaction', false);
+            // - wait_for_update: visszatérő látogatónál rövid (alapból 1000ms), újnál 30000ms,
+            //   hogy a GTM ne tüzeljen a felhasználó döntése előtt.
+            // - region: EU/EEA lista (GDPR-only default)
+            (function (cfg) {
+                try {
+                    var stored = { analytics: 'denied', ads: 'denied' };
+                    var hasPrior = false;
 
-                gtag('consent', 'default', {
-                    'ad_storage': 'denied',
-                    'analytics_storage': 'denied',
-                    'ad_user_data': 'denied',
-                    'ad_personalization': 'denied',
-                    'functionality_storage': 'granted',
-                    'necessary_storage': 'granted',
-                    'wait_for_update': <?php echo intval($wait_for_update); ?>,
-                    'region': <?php echo $regions_json; ?>
-                });
+                    // A cookie-t a böngésző olvassa, így a HTML cache-elhető
+                    try {
+                        var m = document.cookie.match('(?:^|; )' + cfg.cookie + '=([^;]*)');
+                        var state = m ? JSON.parse(decodeURIComponent(m[1])) : null;
+                        var age = state ? Math.floor(Date.now() / 1000) - parseInt(state.ts, 10) : 0;
+                        if (state && state.version === cfg.version && !isNaN(age) && age <= cfg.ttl_days * 86400) {
+                            var c = state.choices || {};
+                            stored.analytics = c.analytics ? 'granted' : 'denied';
+                            stored.ads = c.ads ? 'granted' : 'denied';
+                            hasPrior = stored.analytics !== 'denied' || stored.ads !== 'denied';
+                        }
+                    } catch (e) {}
 
-                <?php if ($has_prior_consent): ?>
-                // Visszatérő látogató: GTM-et frissítjük a tárolt hozzájárulással
-                // még mielőtt a GTM betöltene, hogy azonnal tüzeljenek a tagek.
-                gtag('consent', 'update', {
-                    'ad_storage': '<?php echo esc_js($ads_status); ?>',
-                    'analytics_storage': '<?php echo esc_js($analytics_status); ?>',
-                    'ad_user_data': '<?php echo esc_js($ads_status); ?>',
-                    'ad_personalization': '<?php echo esc_js($ads_status); ?>'
-                });
-                <?php endif; ?>
-
-                // Jelzés a GTM felé (debughoz / integrációhoz hasznos)
-                window.dataLayer.push({
-                    'event': 'cm_default',
-                    'cmv2_version': '<?php echo CMV2_CONSENT_VERSION; ?>',
-                    'consent_default': {
-                        ad_storage: 'denied',
-                        analytics_storage: 'denied',
-                        ad_user_data: 'denied',
-                        ad_personalization: 'denied',
-                        functionality_storage: 'granted',
-                        necessary_storage: 'granted'
+                    // url_passthrough: csak akkor, ha Google Ads aktív (gclid/gbraid URL-paraméteres követés)
+                    if (cfg.url_passthrough) {
+                        gtag('set', 'url_passthrough', true);
                     }
-                });
-            } catch (e) {
-                // defensive: if gtag() or dataLayer unavailable, still continue without throwing
-                console.warn('CMV2: consent default init failed', e);
-            }
+                    // ads_data_redaction kikapcsolva: denied esetén is küld modellezhető jelet
+                    gtag('set', 'ads_data_redaction', false);
+
+                    gtag('consent', 'default', {
+                        'ad_storage': 'denied',
+                        'analytics_storage': 'denied',
+                        'ad_user_data': 'denied',
+                        'ad_personalization': 'denied',
+                        'functionality_storage': 'granted',
+                        'necessary_storage': 'granted',
+                        'wait_for_update': hasPrior ? cfg.wait_for_update : 30000,
+                        'region': cfg.regions
+                    });
+
+                    if (hasPrior) {
+                        // Visszatérő látogató: a GTM betöltése előtt frissítjük a tárolt hozzájárulással
+                        gtag('consent', 'update', {
+                            'ad_storage': stored.ads,
+                            'analytics_storage': stored.analytics,
+                            'ad_user_data': stored.ads,
+                            'ad_personalization': stored.ads
+                        });
+                    }
+
+                    // Jelzés a GTM felé (debughoz / integrációhoz hasznos)
+                    window.dataLayer.push({
+                        'event': 'cm_default',
+                        'cmv2_version': cfg.version,
+                        'consent_default': {
+                            ad_storage: 'denied',
+                            analytics_storage: 'denied',
+                            ad_user_data: 'denied',
+                            ad_personalization: 'denied',
+                            functionality_storage: 'granted',
+                            necessary_storage: 'granted'
+                        }
+                    });
+                } catch (e) {
+                    console.warn('CMV2: consent default init failed', e);
+                }
+            })(<?php echo wp_json_encode($config); ?>);
         </script>
         <?php if (!empty($gtm_container_id)): ?>
             <script>
@@ -201,50 +185,6 @@ class CMV2_Frontend
                     height="0" width="0" style="display:none;visibility:hidden"></iframe>
         </noscript>
         <?php
-    }
-
-    /**
-     * Read consent from cookie and return status strings.
-     */
-    private static function get_consent_from_cookie($opts)
-    {
-        $default = [
-            'analytics' => 'denied',
-            'ads' => 'denied',
-        ];
-
-        if (!isset($_COOKIE[CMV2_LS_KEY])) {
-            return $default;
-        }
-
-        $raw = wp_unslash($_COOKIE[CMV2_LS_KEY]);
-        $decoded = json_decode(rawurldecode($raw), true);
-        if (!is_array($decoded)) {
-            return $default;
-        }
-
-        if (!isset($decoded['version']) || $decoded['version'] !== CMV2_CONSENT_VERSION) {
-            return $default;
-        }
-
-        if (!isset($decoded['ts']) || !is_numeric($decoded['ts'])) {
-            return $default;
-        }
-
-        $ttl_days = isset($opts['ttl_days']) ? intval($opts['ttl_days']) : 180;
-        $ttl_seconds = max(1, $ttl_days) * DAY_IN_SECONDS;
-        if ((time() - intval($decoded['ts'])) > $ttl_seconds) {
-            return $default;
-        }
-
-        $choices = isset($decoded['choices']) && is_array($decoded['choices']) ? $decoded['choices'] : [];
-        $analytics = !empty($choices['analytics']);
-        $ads = !empty($choices['ads']);
-
-        return [
-            'analytics' => $analytics ? 'granted' : 'denied',
-            'ads' => $ads ? 'granted' : 'denied',
-        ];
     }
 
     /**
@@ -283,11 +223,14 @@ class CMV2_Frontend
         // Konfigurációs adatok átadása JavaScriptnek
         wp_localize_script('cmv2-banner-js', 'CMV2_CONFIG', [
             'version' => CMV2_CONSENT_VERSION,
+            'cookie' => CMV2_LS_KEY,
             'ttl_days' => intval($opts['ttl_days']),
             'popup_position' => $opts['popup_position'],
             'use_zaraz' => (bool)$opts['use_zaraz'],
             'zaraz_purpose_name' => $opts['zaraz_purpose_name'],
             'gtm_container_id' => isset($opts['gtm_container_id']) ? $opts['gtm_container_id'] : '',
+            'stats_url' => !empty($opts['stats_enabled']) ? rest_url('cmv2/v1/event') : '',
+            'stats_token' => !empty($opts['stats_enabled']) ? CMV2_Stats::token() : '',
         ]);
     }
 

@@ -15,7 +15,7 @@
   function init() {
     // Configuration from PHP
     const CONFIG = window.CMV2_CONFIG || {};
-    const LS_KEY = 'cmv2_state';
+    const LS_KEY = CONFIG.cookie || 'cmv2_state';
     const VERSION = CONFIG.version || '2025-10-08';
     const TTL_DAYS = CONFIG.ttl_days || 180;
     const USE_ZARAZ = CONFIG.use_zaraz || false;
@@ -96,6 +96,42 @@
     };
 
     // ======================
+    // Stats Module (anonymous daily counters, see CMV2_Stats)
+    // ======================
+    const Stats = {
+      track: function(event, choices) {
+        if (!CONFIG.stats_url) { return; }
+        try {
+          const payload = JSON.stringify({
+            event: event,
+            token: CONFIG.stats_token || '',
+            analytics: !!(choices && choices.analytics),
+            ads: !!(choices && choices.ads)
+          });
+          if (navigator.sendBeacon && navigator.sendBeacon(CONFIG.stats_url, new Blob([payload], { type: 'application/json' }))) {
+            return;
+          }
+          fetch(CONFIG.stats_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true,
+            credentials: 'omit'
+          });
+        } catch (e) {}
+      },
+
+      // A banner megjelenését munkamenetenként csak egyszer számoljuk
+      trackShown: function() {
+        try {
+          if (sessionStorage.getItem('cmv2_shown')) { return; }
+          sessionStorage.setItem('cmv2_shown', '1');
+        } catch (e) {}
+        this.track('shown');
+      }
+    };
+
+    // ======================
     // Consent Manager Module
     // ======================
     const ConsentManager = {
@@ -107,6 +143,9 @@
       update: function(choices) {
         const analytics = choices.analytics ? 'granted' : 'denied';
         const ads = choices.ads ? 'granted' : 'denied';
+
+        // A script blokkoló ebből tudja, mely kategóriák oldhatók fel
+        document.dispatchEvent(new CustomEvent('cmv2:consent', { detail: choices }));
 
         // Google Consent Mode frissítése
         this.gtag('consent', 'update', {
@@ -311,6 +350,7 @@
           // No valid consent - show banner
           UIController.showSimpleView();
           UIController.showModal();
+          Stats.trackShown();
         }
       },
       
@@ -326,6 +366,7 @@
         
         if (StorageManager.write(state)) {
           ConsentManager.update(choices);
+          Stats.track(isFirstConsent ? 'decision' : 'change', choices);
           // Első consent-döntés után, ha analytics engedélyezve: manuális page_view + session_start.
           // A GTM betöltésekor wait_for_update=30000ms volt beállítva (új látogató), ezért az
           // automatikus GA4 page_view még nem futott le – most pótoljuk.
