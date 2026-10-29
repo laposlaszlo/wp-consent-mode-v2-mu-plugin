@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.1] – 2026-10-29
+
+### Javítás
+- A fejlécbe szúrt inline szkriptek (consent default, GTM betöltő) `data-cfasync="false" data-nowprocket data-cookieconsent="ignore"` attribútumot kapnak. Cloudflare Rocket Loader mellett a consent default korábban csak az oldal betöltése után futott le, a GTM pedig consent jelek nélkül indult, így a Tag Assistant nem látott beleegyezés jeleket.
+
 ## [2.9.0] – 2026-10-21
 
 ### Átállás normál pluginra, automatikus frissítés

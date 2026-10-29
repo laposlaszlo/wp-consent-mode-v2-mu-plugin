@@ -74,7 +74,7 @@ class CMV2_Frontend
             'regions' => CMV2_Options::regions($opts),
         ];
         ?>
-        <script>
+        <script data-cfasync="false" data-nowprocket data-cookieconsent="ignore">
             // dataLayer + gtag bootstrap (ártalmatlan, ha már létezik)
             window.dataLayer = window.dataLayer || [];
 
@@ -153,7 +153,7 @@ class CMV2_Frontend
             })(<?php echo wp_json_encode($config); ?>);
         </script>
         <?php if (!empty($gtm_container_id)): ?>
-            <script>
+            <script data-cfasync="false" data-nowprocket data-cookieconsent="ignore">
                 // GTM de-duplication guard: prevents double injection if theme or another
                 // plugin already loaded this container (or this snippet runs more than once).
                 (function(w,d,s,l,i){
